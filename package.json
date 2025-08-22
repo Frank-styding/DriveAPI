@@ -1,0 +1,38 @@
+{
+  "name": "exel-control",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "clasp push --watch",
+    "build": "rollup -c rollup.config.js",
+    "watch": "rollup -c rollup.config.js --watch",
+    "dev": "concurrently \"npm run gwatch\" \"npm run gstart\"",
+    "login": "clasp login",
+    "logout": "clasp logout",
+    "push": "npm run build && clasp push",
+    "pull": "clasp pull",
+    "create": "clasp create --title ExcelControl --type webapp --rootDir ./dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.26.8",
+    "@babel/plugin-transform-flow-strip-types": "^7.26.5",
+    "@babel/plugin-transform-runtime": "^7.27.1",
+    "@babel/preset-env": "^7.26.8",
+    "@babel/preset-typescript": "^7.27.1",
+    "@google/clasp": "^2.5.0",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/google-apps-script": "^1.0.94",
+    "parcel": "^2.15.4",
+    "process": "^0.11.10",
+    "rollup": "^4.40.2",
+    "typescript": "^5.8.3"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
