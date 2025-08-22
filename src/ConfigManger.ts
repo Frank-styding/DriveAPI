@@ -1,5 +1,5 @@
 import { DriveManager } from "./DriveManger";
-import { processQueue } from "./processQueue";
+import { ProcessQueue } from "./processQueue";
 import { QueueManager } from "./QueueManager";
 import { SheetManager } from "./SheetManager";
 import { TriggerManager } from "./TriggerManager";
@@ -45,7 +45,7 @@ export class ConfigManger {
       }
       case "processQueue": {
         const config = this.getConfig();
-        return processQueue(config);
+        return ProcessQueue.processQueue(config);
       }
       case "clearTriggers": {
         TriggerManager.deleteAllTriggers();

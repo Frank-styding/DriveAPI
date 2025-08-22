@@ -1,6 +1,6 @@
 import { ConfigManger } from "./ConfigManger";
 import { DriveManager } from "./DriveManger";
-import { processQueue } from "./processQueue";
+import { operations, ProcessQueue } from "./processQueue";
 import { QueueManager } from "./QueueManager";
 import { RequestLock } from "./RequestLock";
 import { SheetManager } from "./SheetManager";
@@ -54,7 +54,7 @@ function doPost(e) {
 
       // Process the request
 
-      if (json.type != "insertRowMany" && json.type != "insertRow") {
+      if (operations.includes(json.type)) {
         PropertiesService.getScriptProperties().setProperty("isReady", "true");
         return ContentService.createTextOutput(
           JSON.stringify({
@@ -72,7 +72,7 @@ function doPost(e) {
           const queueItem = {
             type: json.type,
             data: item,
-            id: item.id || `item_${Date.now()}`,
+            id: `item_${Date.now()}`,
             timestamp: new Date(item.timestamp || Date.now()).getTime(),
           };
           QueueManager.addToQueue(queueItem);
@@ -81,7 +81,7 @@ function doPost(e) {
         const queueItem = {
           type: json.type,
           data: json.data,
-          id: json.data.id || `item_${Date.now()}`,
+          id: `item_${Date.now()}`,
           timestamp: new Date(json.data.timestamp || Date.now()).getTime(),
         };
         QueueManager.addToQueue(queueItem);
@@ -118,20 +118,10 @@ function doPost(e) {
 }
 
 function triggerFunc() {
-  processQueue(ConfigManger.getConfig());
-}
-/* 
-function testConfig() {
-  ConfigManger.setConfig({
-    fileName: "sheets",
-    folderName: "data",
-    sheetName: Utils.formatDate(new Date()),
-    columns: ["col1", "col2", "col3"],
-  });
-  console.log(ConfigManger.getConfig());
+  ProcessQueue.processQueue(ConfigManger.getConfig());
 }
 
-function testClearTrigger() {
+/* function testClearTrigger() {
   ConfigManger.setConfig({
     operation: "clearTriggers",
   });
@@ -142,28 +132,83 @@ function testInitTrigger() {
     time: 5,
     operation: "initProcessQueueTrigger",
   });
+} */
+
+function testConfig() {
+  ConfigManger.setConfig({
+    folderName: "data",
+    headers: ["inicio", "horas", "Estado"],
+    headerFormats: {
+      1: {
+        numberFormat: "[h]:mm:ss",
+      },
+      2: {
+        conditionalRules: [
+          {
+            type: "textIsEmpty",
+            background: "white",
+          },
+          {
+            type: "textEqualTo",
+            value: "Trabajando",
+            background: "green",
+          },
+          {
+            type: "notEqualTo",
+            value: "Trabajando",
+            background: "red",
+          },
+        ],
+      },
+    },
+    rowFormulas: {
+      fin: "=A2",
+      horas: "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
+    },
+    formulasFormat: {
+      horas_trabajo: {
+        numberFormat: "[h]:mm:ss",
+      },
+      horas_almuerzo: {
+        numberFormat: "[h]:mm:ss",
+      },
+    },
+    formulas: {
+      horas_trabajo: '=SUMIF(C2:C, "Trabajando", B2:B)',
+      horas_almuerzo: '=SUMIF(C2:C, "Almuerzo", B2:B)',
+    },
+  });
+  console.log(ConfigManger.getConfig());
 }
 
 function testAddToQueue() {
   QueueManager.clearQueue();
   const json = {
-    type: "insertRow",
+    type: "insertFormat_1",
     data: {
-      data: { col1: 1, col2: 1, col3: 1 },
+      data: {
+        tableName: "jose",
+        tableData: { capitan: "jose" },
+        items: [
+          { inicio: "9:00", Estado: "Trabajando" },
+          { inicio: "10:00", Estado: "Materiales" },
+          { inicio: "12:00", Estado: "Trabajando" },
+          { inicio: "13:00", Estado: "Almuerzo" },
+          { inicio: "15:00", Estado: "Trabajando" },
+        ],
+      },
       spreadsheetName: Utils.formatDate(new Date()),
       sheetName: Utils.formatDate(new Date()),
     },
-    id: "hola1",
     timestamp: "2023-10-01T12:00:00Z",
   };
   QueueManager.addToQueue({
     type: json.type,
     data: json.data,
-    id: json.id || `item_${Date.now()}`,
+    id: `item_${Date.now()}`,
     timestamp: new Date(json.timestamp || Date.now()).getTime(),
   });
   console.log(QueueManager.getQueue());
-  console.log(ConfigManger.getConfig());
 }
 
 function testProcessQueue() {
@@ -189,4 +234,10 @@ function checkLockStatus() {
     console.log("No active lock");
   }
 }
- */
+
+function test() {
+  testConfig();
+  testAddToQueue();
+  testProcessQueue();
+  triggerFunc();
+}
