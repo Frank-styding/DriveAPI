@@ -1,12 +1,10 @@
 import { ConfigManger } from "./ConfigManger";
-import { DriveManager } from "./DriveManger";
 import { operations, ProcessQueue } from "./processQueue";
 import { QueueManager } from "./QueueManager";
 import { RequestLock } from "./RequestLock";
-import { SheetManager } from "./SheetManager";
-import { Utils } from "./utils";
 
 function doPost(e) {
+  initConfig();
   const requestId = `req_${Date.now()}_${Math.random()
     .toString(36)
     .substr(2, 9)}`;
@@ -54,7 +52,7 @@ function doPost(e) {
 
       // Process the request
 
-      if (operations.includes(json.type)) {
+      if (!operations.includes(json.type)) {
         PropertiesService.getScriptProperties().setProperty("isReady", "true");
         return ContentService.createTextOutput(
           JSON.stringify({
@@ -121,123 +119,92 @@ function triggerFunc() {
   ProcessQueue.processQueue(ConfigManger.getConfig());
 }
 
-/* function testClearTrigger() {
-  ConfigManger.setConfig({
-    operation: "clearTriggers",
-  });
-}
-
-function testInitTrigger() {
-  ConfigManger.setConfig({
-    time: 5,
-    operation: "initProcessQueueTrigger",
-  });
-} */
-
-function testConfig() {
-  ConfigManger.setConfig({
-    folderName: "data",
-    headers: ["inicio", "horas", "Estado"],
-    headerFormats: {
-      1: {
-        numberFormat: "[h]:mm:ss",
-      },
-      2: {
-        conditionalRules: [
-          {
-            type: "textIsEmpty",
-            background: "white",
-          },
-          {
-            type: "textEqualTo",
-            value: "Trabajando",
-            background: "green",
-          },
-          {
-            type: "notEqualTo",
-            value: "Trabajando",
-            background: "red",
-          },
-        ],
-      },
-    },
-    rowFormulas: {
-      fin: "=A2",
-      horas: "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
-    },
-    formulasFormat: {
-      horas_trabajo: {
-        numberFormat: "[h]:mm:ss",
-      },
-      horas_almuerzo: {
-        numberFormat: "[h]:mm:ss",
-      },
-    },
-    formulas: {
-      horas_trabajo: '=SUMIF(C2:C, "Trabajando", B2:B)',
-      horas_almuerzo: '=SUMIF(C2:C, "Almuerzo", B2:B)',
-    },
-  });
-  console.log(ConfigManger.getConfig());
-}
-
-function testAddToQueue() {
-  QueueManager.clearQueue();
-  const json = {
-    type: "insertFormat_1",
-    data: {
+function initConfig() {
+  if (Object.keys(ConfigManger.getConfig()).length == 0) {
+    ConfigManger.setConfig({
+      type: "config",
       data: {
-        tableName: "jose",
-        tableData: { capitan: "jose" },
-        items: [
-          { inicio: "9:00", Estado: "Trabajando" },
-          { inicio: "10:00", Estado: "Materiales" },
-          { inicio: "12:00", Estado: "Trabajando" },
-          { inicio: "13:00", Estado: "Almuerzo" },
-          { inicio: "15:00", Estado: "Trabajando" },
-        ],
+        folderName: "data",
+        headers: ["inicio", "horas", "estado"],
+        headerFormats: {
+          1: {
+            numberFormat: "[h]:mm:ss",
+          },
+          2: {
+            conditionalRules: [
+              {
+                type: "textIsEmpty",
+                background: "white",
+              },
+              {
+                type: "textEqualTo",
+                value: "trabajando",
+                background: "#41B451",
+              },
+              {
+                type: "textEqualTo",
+                value: "fin jornada",
+                background: "#389FBE",
+              },
+              {
+                type: "notEqualTo",
+                value: "trabajando",
+                background: "#AA3636",
+              },
+            ],
+          },
+        },
+        rowFormulas: {
+          fin: "=A2",
+          horas: "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
+        },
+        formulasFormat: {
+          trabajo: {
+            numberFormat: "[h]:mm:ss",
+          },
+          falta_matriales: {
+            numberFormat: "[h]:mm:ss",
+          },
+          translado_interno: {
+            numberFormat: "[h]:mm:ss",
+          },
+          problemas_climaticos: {
+            numberFormat: "[h]:mm:ss",
+          },
+          almuerzo: {
+            numberFormat: "[h]:mm:ss",
+          },
+          charlas: {
+            numberFormat: "[h]:mm:ss",
+          },
+          pausas: {
+            numberFormat: "[h]:mm:ss",
+          },
+          materia_prima: {
+            numberFormat: "[h]:mm:ss",
+          },
+          repaso: {
+            numberFormat: "[h]:mm:ss",
+          },
+        },
+        formulas: {
+          trabajo: '=SUMIF(C2:C, "trabajando", B2:B)',
+          falta_matriales: '=SUMIF(C2:C, "materiales", B2:B)',
+          translado_interno: '=SUMIF(C2:C, "traslado interno", B2:B)',
+          problemas_climaticos: '=SUMIF(C2:C, "problemas climaticos", B2:B)',
+          almuerzo: '=SUMIF(C2:C, "almuerzo", B2:B)',
+          charlas: '=SUMIF(C2:C, "charla", B2:B)',
+          pausas: '=SUMIF(C2:C, "pausa", B2:B)',
+          materia_prima: '=SUMIF(C2:C, "materia prima", B2:B)',
+          repaso: '=SUMIF(C2:C, "repaso", B2:B)',
+        },
       },
-      spreadsheetName: Utils.formatDate(new Date()),
-      sheetName: Utils.formatDate(new Date()),
-    },
-    timestamp: "2023-10-01T12:00:00Z",
-  };
-  QueueManager.addToQueue({
-    type: json.type,
-    data: json.data,
-    id: `item_${Date.now()}`,
-    timestamp: new Date(json.timestamp || Date.now()).getTime(),
-  });
-  console.log(QueueManager.getQueue());
-}
-
-function testProcessQueue() {
-  SheetManager.clearCache();
-  DriveManager.clearCache();
-}
-
-// Utility function to clear locks manually (for testing/debugging)
-function clearAllLocks() {
-  PropertiesService.getScriptProperties().deleteProperty("request_lock");
-  console.log("All locks cleared");
-}
-
-// Function to check current lock status
-function checkLockStatus() {
-  const lockData =
-    PropertiesService.getScriptProperties().getProperty("request_lock");
-  if (lockData) {
-    const lockInfo = JSON.parse(lockData);
-    const lockAge = Date.now() - lockInfo.timestamp;
-    console.log(`Lock exists: ${lockInfo.requestId}, Age: ${lockAge}ms`);
-  } else {
-    console.log("No active lock");
+    });
   }
 }
-
-function test() {
-  testConfig();
-  testAddToQueue();
-  testProcessQueue();
-  triggerFunc();
+function clearCache() {
+  DriveManager.clearCache();
+  SheetManager.clearCache();
+  QueueManager.clearQueue();
+  TriggerManager.deleteAllTriggers();
 }

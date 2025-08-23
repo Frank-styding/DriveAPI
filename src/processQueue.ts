@@ -206,7 +206,7 @@ export class ProcessQueue {
       const formulasFormat = Object.entries(
         config["formulasFormat"] as ConfigFormat
       ).map(([key, value]) => ({
-        cellCol: headers.length + 2,
+        cellCol: headers.length + 2 + startCol,
         ///!  change this if you change template
         cellRow:
           tableEntries.length +
