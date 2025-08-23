@@ -1,7 +1,10 @@
 import { ConfigManger } from "./ConfigManger";
+import { DriveManager } from "./DriveManger";
 import { operations, ProcessQueue } from "./processQueue";
 import { QueueManager } from "./QueueManager";
 import { RequestLock } from "./RequestLock";
+import { SheetManager } from "./SheetManager";
+import { TriggerManager } from "./TriggerManager";
 
 function doPost(e) {
   initConfig();
