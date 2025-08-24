@@ -1,6 +1,6 @@
 import { QueueItem, QueueManager } from "./QueueManager";
-import { IFormat, SheetManager } from "./SheetManager";
-import { Utils } from "./utils";
+import { IFormat, SheetManager } from "../src/SheetManager";
+import { Utils } from "../src/utils";
 interface IConfig {
   tableNames: string[];
   headers: string[];

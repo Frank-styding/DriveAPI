@@ -1,4 +1,4 @@
-import { ConfigManger } from "./ConfigManger";
+/* import { ConfigManger } from "./ConfigManger";
 import { DriveManager } from "./DriveManger";
 import { operations, ProcessQueue } from "./processQueue";
 import { QueueManager } from "./QueueManager";
@@ -211,3 +211,11 @@ function clearCache() {
   QueueManager.clearQueue();
   TriggerManager.deleteAllTriggers();
 }
+ */
+
+import { DriveManager } from "./DriveManager";
+function doGet() {
+  DriveManager.clearCache();
+}
+
+(globalThis as any).doGet = doGet;

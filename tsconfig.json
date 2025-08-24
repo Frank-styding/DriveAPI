@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "noEmitOnError": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": [
+    "src/**/*",
+    "aux1/processQueue.ts",
+    "aux1/QueueManager.ts",
+    "aux1/RequestLock.ts",
+    "aux1/SheetManager.ts",
+    "aux1/TriggerManager.ts",
+    "aux1/utils.ts",
+    "aux1/ConfigManger.ts",
+    "aux1/DriveManger.ts",
+    "aux1/FormulaProcesor.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

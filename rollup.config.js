@@ -1,33 +1,25 @@
-import { babel } from "@rollup/plugin-babel";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
-
-const extensions = [".ts", ".js"];
-
-const preventTreeShakingPlugin = () => {
-  return {
-    name: "no-treeshaking",
-    resolveId(id, importer) {
-      if (!importer) {
-        // let's not treeshake entry points, as we're not exporting anything in Api
-        return { id, moduleSideEffects: "no-treeshake" };
-      }
-      return null;
-    },
-  };
-};
+import typescript from "@rollup/plugin-typescript";
 
 export default {
-  input: "./src/main.ts",
+  input: "src/main.ts",
   output: {
-    dir: "dist",
-    format: "esm",
+    file: "dist/main.js",
+    format: "cjs", // CommonJS format - no encapsula las funciones globales
+    banner: "// Google Apps Script compiled code\n",
+    sourcemap: false,
+    exports: "none", // No usar exports, las funciones van directo al global
   },
   plugins: [
-    preventTreeShakingPlugin(),
     nodeResolve({
-      extensions,
-      mainFields: ["jsnext:main", "index."],
+      preferBuiltins: false,
     }),
-    babel({ extensions, babelHelpers: "runtime" }),
+    typescript({
+      tsconfig: "./tsconfig.json",
+      declaration: false,
+      declarationMap: false,
+    }),
   ],
+  // No external dependencies - todo se bundle junto
+  external: [],
 };

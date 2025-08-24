@@ -1,7 +1,7 @@
 import { DriveManager } from "./DriveManger";
 import { ProcessQueue } from "./processQueue";
 import { QueueManager } from "./QueueManager";
-import { SheetManager } from "./SheetManager";
+import { SheetManager } from "../src/SheetManager";
 import { TriggerManager } from "./TriggerManager";
 
 /**
