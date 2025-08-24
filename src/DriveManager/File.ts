@@ -14,7 +14,7 @@ export class File {
       folder.addFile(file);
       DriveApp.getRootFolder().removeFile(file);
     }
-    DriveCache.saveFileID(name, file.getId());
+    this.saveFileID(name, file.getId());
     DriveCache.saveCache();
     return file;
   }
@@ -40,7 +40,7 @@ export class File {
       DriveApp.getRootFolder().removeFile(file);
     }
 
-    DriveCache.saveFileID(name, file.getId());
+    this.saveFileID(name, file.getId());
     DriveCache.saveCache();
   }
   static deleteFile(folderName: string, name: string) {
@@ -60,7 +60,7 @@ export class File {
     if (!fileId) return;
     const file = DriveApp.getFileById(fileId);
     file.setName(newName);
-    DriveCache.saveFileID(newName, file.getId());
+    this.saveFileID(newName, file.getId());
     delete cache.filesData[name];
     DriveCache.saveCache();
   }
@@ -89,5 +89,10 @@ export class File {
     const file = DriveApp.getFileById(fileId);
     toFolder.addFile(file);
     sourceFolder.removeFile(file);
+  }
+
+  static saveFileID(name: string, id: string) {
+    const cache = DriveCache.getCache();
+    cache.filesData[name] = id;
   }
 }

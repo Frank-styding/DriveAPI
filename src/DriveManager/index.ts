@@ -4,5 +4,5 @@ import { DriveCache } from "./cache";
 export const DriveManager = {
   File,
   Folder,
-  clearCache: DriveCache.clearCache,
+  cache: DriveCache,
 };

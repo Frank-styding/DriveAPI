@@ -6,7 +6,7 @@ export class Folder {
     const cache = DriveCache.getCache();
     if (cache.foldersData[name]) return;
     const folder = DriveApp.createFolder(name);
-    DriveCache.saveFolderID(name, folder.getId());
+    this.saveFolderID(name, folder.getId());
     DriveCache.saveCache();
     return folder;
   }
@@ -25,7 +25,7 @@ export class Folder {
     if (!cache.foldersData[name]) return;
     const folder = DriveApp.getFolderById(cache.foldersData[name]);
     folder.setName(newName);
-    DriveCache.saveFolderID(newName, folder.getId());
+    this.saveFolderID(newName, folder.getId());
     delete cache.foldersData[name];
     DriveCache.saveCache();
   }
@@ -38,5 +38,14 @@ export class Folder {
   static getFolderNames() {
     const cache = DriveCache.getCache();
     return Object.keys(cache.foldersData);
+  }
+
+  static getFolderID(name: string) {
+    const cache = DriveCache.getCache();
+    return cache.foldersData[name] || null;
+  }
+  static saveFolderID(name: string, id: string) {
+    const cache = DriveCache.getCache();
+    cache.foldersData[name] = id;
   }
 }

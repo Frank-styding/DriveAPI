@@ -1,6 +1,5 @@
-import { QueueItem, QueueManager } from "./QueueManager";
-import { IFormat, SheetManager } from "../src/SheetManager";
-import { Utils } from "../src/utils";
+import { QueueItem } from "../QueueManager/QueueItem";
+import { IFormat, SheetManager } from "../SheetManager";
 interface IConfig {
   tableNames: string[];
   headers: string[];
@@ -8,86 +7,7 @@ interface IConfig {
   rowFormulas: Record<string, string>;
   folderName: string;
 }
-export const operations = ["insertRow", "insertFormat_1"];
-export class ProcessQueue {
-  private constructor() {}
-  static processQueue(config: Record<string, any>) {
-    const queue = [...QueueManager.getQueue()];
-    if (queue.length === 0) {
-      return ContentService.createTextOutput("No items in queue");
-    }
-    this.processType(
-      queue,
-      "insertRow",
-      config,
-      this.processInsertRow.bind(this)
-    );
-    this.processType(
-      queue,
-      "insertFormat_1",
-      config,
-      this.processFormat1.bind(this)
-    );
-  }
-
-  static processType(
-    queue: QueueItem[],
-    type: string,
-    config: Record<string, any>,
-    callback: (
-      data: QueueItem[],
-      sheetName: string,
-      config: Record<string, any>,
-      spreadsheetName: string
-    ) => void
-  ) {
-    const insertRowQueue = queue.filter((item) => item.type === type);
-    if (insertRowQueue.length == 0) return;
-    const groupedData: Record<string, Record<string, QueueItem[]>> = {};
-    insertRowQueue.forEach((item) => {
-      const spreadsheetName =
-        item.data.spreadsheetName || Utils.formatDate(new Date());
-      const sheetName = item.data.sheetName || Utils.formatDate(new Date());
-      if (!groupedData[spreadsheetName]) {
-        groupedData[spreadsheetName] = {};
-      }
-      if (!groupedData[spreadsheetName][sheetName]) {
-        groupedData[spreadsheetName][sheetName] = [];
-      }
-      groupedData[spreadsheetName][sheetName].push(item);
-    });
-    Object.keys(groupedData).forEach((spreadsheetName) => {
-      const sheets = groupedData[spreadsheetName];
-      Object.keys(sheets).forEach((sheetName) => {
-        const data = sheets[sheetName];
-        callback(data, sheetName, config, spreadsheetName);
-      });
-    });
-  }
-
-  static processInsertRow(
-    data: QueueItem[],
-    sheetName: string,
-    config: Record<string, any>,
-    spreadsheetName: string
-  ) {
-    const columns = config["columns"] || [];
-    const folderName = config["folderName"] || "data";
-    if (!SheetManager.existsSpreadsheet(spreadsheetName)) {
-      SheetManager.createSpreadsheet(spreadsheetName, folderName);
-    }
-    if (!SheetManager.existsSheet(spreadsheetName, sheetName)) {
-      SheetManager.createSheet(spreadsheetName, sheetName);
-      SheetManager.createtTable(spreadsheetName, sheetName, columns);
-    }
-    SheetManager.insertRows(
-      spreadsheetName,
-      sheetName,
-      data.map((item) => item.data.data) as Record<string, any>[]
-    );
-    QueueManager.removeManyFromQueue(data.map((item) => item.id));
-  }
-
+export class Format1 {
   static createTemplateFormat1(
     headers: string[],
     formulas: Record<string, string>,
@@ -152,7 +72,7 @@ export class ProcessQueue {
     const formulaEntries = Object.entries(formulas);
     const tableEntries = Object.entries(tableData);
     const rows = tableEntries.length + formulaEntries.length;
-    SheetManager.createWithTemplate(
+    SheetManager.Template.createWithTemplate(
       spreadsheetName,
       sheetName,
       startCol,
@@ -186,7 +106,7 @@ export class ProcessQueue {
 
     if (config["headerFormats"]) {
       const startRow =
-        SheetManager.getMaxRow(spreadsheetName, sheetName, startCol) + 1;
+        SheetManager.Row.getMaxRow(spreadsheetName, sheetName, startCol) + 1;
       const columnFormats = Object.entries(
         config["headerFormats"] as ConfigFormat
       ).map(([key, value]) => ({
@@ -195,7 +115,7 @@ export class ProcessQueue {
         ...value,
       })) as IFormat[];
 
-      SheetManager.applyColumnFormats(
+      SheetManager.Template.applyColumnFormats(
         spreadsheetName,
         sheetName,
         columnFormats
@@ -214,7 +134,7 @@ export class ProcessQueue {
           formulaEntries.findIndex(([i, _]) => i == key),
         ...value,
       })) as IFormat[];
-      SheetManager.applyColumnFormats(
+      SheetManager.Template.applyColumnFormats(
         spreadsheetName,
         sheetName,
         formulasFormat
@@ -265,12 +185,12 @@ export class ProcessQueue {
       }
       groupDataByTable[tableName].push(...item.data.data["items"]);
     });
-    if (!SheetManager.existsSpreadsheet(spreadsheetName)) {
-      SheetManager.createSpreadsheet(spreadsheetName, folderName);
+    if (!SheetManager.Spreadsheet.existsSpreadsheet(spreadsheetName)) {
+      SheetManager.Spreadsheet.createSpreadsheet(spreadsheetName, folderName);
       this.restoreFormta1Memory();
     }
-    if (!SheetManager.existsSheet(spreadsheetName, sheetName)) {
-      SheetManager.createSheet(spreadsheetName, sheetName);
+    if (!SheetManager.Sheet.existsSheet(spreadsheetName, sheetName)) {
+      SheetManager.Sheet.createSheet(spreadsheetName, sheetName);
     }
 
     Object.entries(groupDataByTable).forEach(([tableName, items]) => {
@@ -294,7 +214,7 @@ export class ProcessQueue {
         tableData[tableName],
         config
       );
-      SheetManager.insertRowsRange(
+      SheetManager.Row.insertRowsRange(
         spreadsheetName,
         sheetName,
         this.getStarCol(headers, sheetName, tableName),

@@ -18,6 +18,7 @@ export class DriveCache {
   }
 
   static getCache() {
+    if (this.DRIVE_CACHE) return this.DRIVE_CACHE;
     this.DRIVE_CACHE = CacheManager.getCache<IDriveCache>(DRIVE_KEY, {
       foldersData: {},
       filesData: {},
@@ -28,11 +29,5 @@ export class DriveCache {
   }
   static clearCache() {
     CacheManager.clearCache(DRIVE_KEY);
-  }
-  static saveFolderID(name: string, id: string) {
-    this.DRIVE_CACHE.foldersData[name] = id;
-  }
-  static saveFileID(name: string, id: string) {
-    this.DRIVE_CACHE.filesData[name] = id;
   }
 }

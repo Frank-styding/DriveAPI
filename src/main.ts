@@ -1,12 +1,11 @@
-/* import { ConfigManger } from "./ConfigManger";
-import { DriveManager } from "./DriveManger";
-import { operations, ProcessQueue } from "./processQueue";
-import { QueueManager } from "./QueueManager";
-import { RequestLock } from "./RequestLock";
+import { ConfigManger } from "./config/ConfigManger";
+import { DriveManager } from "./DriveManager";
+import { QueueItem, QueueManager } from "./QueueManager";
+import { RequestLock } from "./RequestLock/RequestLock";
 import { SheetManager } from "./SheetManager";
-import { TriggerManager } from "./TriggerManager";
+import { TriggerManager } from "./TriggerManager/TriggerManager";
 
-function doPost(e) {
+function doPost(e: any) {
   initConfig();
   const requestId = `req_${Date.now()}_${Math.random()
     .toString(36)
@@ -55,7 +54,7 @@ function doPost(e) {
 
       // Process the request
 
-      if (!operations.includes(json.type)) {
+      if (!QueueManager.operations.includes(json.type)) {
         PropertiesService.getScriptProperties().setProperty("isReady", "true");
         return ContentService.createTextOutput(
           JSON.stringify({
@@ -69,14 +68,14 @@ function doPost(e) {
       // Process the request
 
       if (Array.isArray(json.data)) {
-        json.data.forEach((item) => {
-          const queueItem = {
+        (json.data as QueueItem[]).forEach((item) => {
+          const queueItem: QueueItem = {
             type: json.type,
             data: item,
             id: `item_${Date.now()}`,
             timestamp: new Date(item.timestamp || Date.now()).getTime(),
           };
-          QueueManager.addToQueue(queueItem);
+          QueueManager.Queue.addToQueue(queueItem);
         });
       } else {
         const queueItem = {
@@ -85,7 +84,7 @@ function doPost(e) {
           id: `item_${Date.now()}`,
           timestamp: new Date(json.data.timestamp || Date.now()).getTime(),
         };
-        QueueManager.addToQueue(queueItem);
+        QueueManager.Queue.addToQueue(queueItem);
       }
       // Set ready state
       PropertiesService.getScriptProperties().setProperty("isReady", "true");
@@ -111,7 +110,7 @@ function doPost(e) {
     return ContentService.createTextOutput(
       JSON.stringify({
         error: "Internal error",
-        message: error.toString(),
+        message: (error as string).toString(),
         requestId: requestId,
       })
     ).setMimeType(ContentService.MimeType.JSON);
@@ -119,7 +118,7 @@ function doPost(e) {
 }
 
 function triggerFunc() {
-  ProcessQueue.processQueue(ConfigManger.getConfig());
+  QueueManager.ProcessQueue.processQueue(ConfigManger.getConfig());
 }
 
 function initConfig() {
@@ -206,16 +205,8 @@ function initConfig() {
   }
 }
 function clearCache() {
-  DriveManager.clearCache();
-  SheetManager.clearCache();
-  QueueManager.clearQueue();
+  DriveManager.cache.clearCache();
+  SheetManager.cache.clearCache();
+  QueueManager.cache.clearCache();
   TriggerManager.deleteAllTriggers();
 }
- */
-
-import { DriveManager } from "./DriveManager";
-function doGet() {
-  DriveManager.clearCache();
-}
-
-(globalThis as any).doGet = doGet;

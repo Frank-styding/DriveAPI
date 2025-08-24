@@ -1,42 +1,47 @@
-/* import { CacheManager } from "../CacheManager";
+import { CacheManager } from "../CacheManager";
+
+const SHEET_KEY = "SHEET_KEY";
+
 interface ISheetCache {
   spreadsheetsData: Record<string, string>;
   lastUpdated: number;
 }
 
-let SHEET_CACHE: undefined | ISheetCache;
-const CACHE_KEY = "SHEET_CACHE"; */
-/* export function initialize() {
-  if (SHEET_CACHE != undefined) return;
-  SHEET_CACHE = { spreadsheetsData: {}, lastUpdated: 0 };
-  CacheManager.saveCache(CACHE_KEY, SHEET_CACHE);
-}
+export class SheetCache {
+  private constructor() {}
+  static SHEET_CACHE: ISheetCache;
 
-export function getCache(): ISheetCache {
-  initialize();
-  return SHEET_CACHE || { spreadsheetsData: {}, lastUpdated: 0 };
-}
+  static getCache() {
+    if (this.SHEET_CACHE) return this.SHEET_CACHE;
+    this.SHEET_CACHE = CacheManager.getCache<ISheetCache>(SHEET_KEY, {
+      spreadsheetsData: {},
+      lastUpdated: 0,
+    });
+    return this.SHEET_CACHE;
+  }
 
-export function saveCache(): void {
-  CacheManager.saveCache(
-    CACHE_KEY,
-    SHEET_CACHE || { spreadsheetsData: {}, lastUpdated: 0 }
-  );
-}
+  static getSpreadsheetCache(name: string) {
+    this.getCache();
+    return this.SHEET_CACHE.spreadsheetsData[name];
+  }
 
-export function getSpreadsheetCache(name: string): string | undefined {
-  getCache();
-  if (!SHEET_CACHE) return undefined;
-  return SHEET_CACHE.spreadsheetsData[name];
-}
+  static saveCache() {
+    CacheManager.saveCache<ISheetCache>(SHEET_KEY, this.SHEET_CACHE, {
+      spreadsheetsData: {},
+      lastUpdated: 0,
+    });
+  }
 
-export function saveSpreadsheetID(name: string, id: string): void {
-  (SHEET_CACHE || { spreadsheetsData: {}, lastUpdated: 0 }).spreadsheetsData[
-    name
-  ] = id;
-}
+  static saveSpreadsheetID(name: string, id: string) {
+    this.SHEET_CACHE.spreadsheetsData[name] = id;
+  }
 
-export function clearCache(): void {
-  Cache.clearCache(CACHE_KEY);
+  static getSpreadsheetID(name: string) {
+    return this.SHEET_CACHE.spreadsheetsData[name];
+  }
+
+  static clearCache() {
+    this.SHEET_CACHE = { spreadsheetsData: {}, lastUpdated: 0 };
+    CacheManager.clearCache(SHEET_KEY);
+  }
 }
- */

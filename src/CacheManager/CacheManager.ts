@@ -14,6 +14,9 @@ export class CacheManager {
     this.addKey(key);
   }
   static getCache<T>(key: string, defaultValue: T = {} as T): T {
+    if (!this.CACHE_DATA) {
+      this.CACHE_DATA = {};
+    }
     if (this.CACHE_DATA[key]) return this.CACHE_DATA[key];
     const valueStr = PropertiesService.getScriptProperties().getProperty(key);
     if (!valueStr) return defaultValue;
@@ -43,7 +46,10 @@ export class CacheManager {
     if (this.CACHE_KEYS != undefined) return;
     const valueStr =
       PropertiesService.getScriptProperties().getProperty(CACHE_KEY);
-    if (!valueStr) return;
+    if (!valueStr) {
+      this.CACHE_KEYS = [];
+      return;
+    }
     const value = JSON.parse(valueStr) as string[];
     this.CACHE_KEYS = value;
   }
