@@ -23,6 +23,5 @@ export class Default {
       sheetName,
       data.map((item) => item.data.data) as Record<string, any>[]
     );
-    Queue.removeManyFromQueue(data.map((item) => item.id));
   }
 }

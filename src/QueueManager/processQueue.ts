@@ -36,6 +36,7 @@ export class ProcessQueue {
         );
       }
     );
+    Queue.removeManyFromQueue(queue.map((item) => item.id));
   }
 
   static processType(

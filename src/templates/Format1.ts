@@ -1,3 +1,4 @@
+import { Queue } from "../QueueManager/queue";
 import { QueueItem } from "../QueueManager/QueueItem";
 import { IFormat, SheetManager } from "../SheetManager";
 interface IConfig {
@@ -219,6 +220,16 @@ export class Format1 {
         sheetName,
         this.getStarCol(headers, sheetName, tableName),
         rows
+      );
+
+      SheetManager.Table.sortTable(
+        spreadsheetName,
+        sheetName,
+        this.getStarCol(headers, sheetName, tableName),
+        2,
+        rows[0].length,
+        1,
+        true
       );
     });
   }

@@ -1,5 +1,6 @@
 import { DriveManager } from "../DriveManager";
 import { SheetCache } from "./cache";
+import { Sheet } from "./sheet";
 
 export class Spreadsheet {
   private constructor() {}
