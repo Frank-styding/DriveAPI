@@ -22,6 +22,7 @@ function doPost(e: any) {
   try {
     const body = e.postData.contents;
     const json = JSON.parse(body);
+    const id = json.id || generateUUID();
 
     // Handle config requests without locking (they're usually fast)
     if (json.type == "config") {
@@ -45,7 +46,6 @@ function doPost(e: any) {
           : "false"
       );
     }
-
     // For all other requests, use locking mechanism
     if (!RequestLock.acquireLock(requestId)) {
       return ContentService.createTextOutput(
@@ -94,6 +94,7 @@ function doPost(e: any) {
         };
         QueueManager.Queue.addToQueue(queueItem);
       }
+
       // Set ready state
       PropertiesService.getScriptProperties().setProperty("isReady", "true");
 

@@ -1,5 +1,6 @@
 import { Queue } from "../QueueManager/queue";
 import { QueueItem } from "../QueueManager/QueueItem";
+import { ItemHistory } from "../RequestHistory/ItemHistory";
 import { IFormat, SheetManager } from "../SheetManager";
 interface IConfig {
   tableNames: string[];
@@ -195,7 +196,11 @@ export class Format1 {
     }
 
     Object.entries(groupDataByTable).forEach(([tableName, items]) => {
-      const rows = items.map((item) =>
+      const unSendItems = items.filter((item) =>
+        item.id ? !ItemHistory.hasBeenSent(item.id) : true
+      );
+
+      const rows = unSendItems.map((item) =>
         headers.map((header) => {
           if (item.hasOwnProperty(header)) {
             return item[header];
@@ -215,22 +220,29 @@ export class Format1 {
         tableData[tableName],
         config
       );
-      SheetManager.Row.insertRowsRange(
-        spreadsheetName,
-        sheetName,
-        this.getStarCol(headers, sheetName, tableName),
-        rows
-      );
+      if (rows.length > 0) {
+        SheetManager.Row.insertRowsRange(
+          spreadsheetName,
+          sheetName,
+          this.getStarCol(headers, sheetName, tableName),
+          rows
+        );
+        SheetManager.Table.sortTable(
+          spreadsheetName,
+          sheetName,
+          this.getStarCol(headers, sheetName, tableName),
+          2,
+          rows[0].length,
+          1,
+          true
+        );
+      }
 
-      SheetManager.Table.sortTable(
-        spreadsheetName,
-        sheetName,
-        this.getStarCol(headers, sheetName, tableName),
-        2,
-        rows[0].length,
-        1,
-        true
-      );
+      unSendItems.map((item) => {
+        if (item.id) {
+          ItemHistory.markAsSent(item.id);
+        }
+      });
     });
   }
 }
