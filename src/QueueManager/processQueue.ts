@@ -2,7 +2,7 @@ import { Template } from "../templates";
 import { Utils } from "../utils/utils";
 import { Queue } from "./queue";
 import { QueueItem } from "./QueueItem";
-export const operations = ["insertRow", "insertFormat_1"];
+export const operations = ["insert", "insert:format_1"];
 export class ProcessQueue {
   private constructor() {}
   static processQueue(config: Record<string, any>) {
@@ -12,7 +12,7 @@ export class ProcessQueue {
     }
     this.processType(
       queue,
-      "insertRow",
+      "insert",
       config,
       (data, sheetName, config, spreadsheetName) => {
         Template.Default.processInsertRow(
@@ -25,7 +25,7 @@ export class ProcessQueue {
     );
     this.processType(
       queue,
-      "insertFormat_1",
+      "insert:format_1",
       config,
       (data, sheetName, config, spreadsheetName) => {
         Template.Format1.processFormat1(

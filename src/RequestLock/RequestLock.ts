@@ -10,7 +10,7 @@ export class RequestLock {
     this.CHECK_INTERVAL = 100;
   }
 
-  static async acquireLock(requestId: string): Promise<boolean> {
+  static acquireLock(requestId: string): boolean {
     this.initialize();
     const startTime = Date.now();
 
@@ -54,6 +54,19 @@ export class RequestLock {
 
     return false;
   }
+  static setIsReady(isReady: boolean) {
+    PropertiesService.getScriptProperties().setProperty(
+      "isReady",
+      isReady ? "true" : "false"
+    );
+  }
+  static getIsReady() {
+    const isReady =
+      PropertiesService.getScriptProperties().getProperty("isReady");
+    const lockExists =
+      PropertiesService.getScriptProperties().getProperty("request_lock");
+    return !lockExists && (isReady === null || isReady === "true");
+  }
 
   static releaseLock(requestId: string): void {
     this.initialize();
@@ -68,6 +81,11 @@ export class RequestLock {
         PropertiesService.getScriptProperties().deleteProperty(this.LOCK_KEY);
       }
     }
+  }
+  static clearCache() {
+    this.initialize();
+    PropertiesService.getScriptProperties().deleteProperty(this.LOCK_KEY);
+    PropertiesService.getScriptProperties().deleteProperty("isReady");
   }
 
   static clearExpiredLocks(): void {

@@ -1,7 +1,6 @@
-import { Queue } from "../QueueManager/queue";
 import { QueueItem } from "../QueueManager/QueueItem";
 import { ItemHistory } from "../RequestHistory/ItemHistory";
-import { IFormat, SheetManager } from "../SheetManager";
+import { IFormat, SheetManager } from "../SheetManager/index";
 interface IConfig {
   tableNames: string[];
   headers: string[];
@@ -197,7 +196,7 @@ export class Format1 {
 
     Object.entries(groupDataByTable).forEach(([tableName, items]) => {
       const unSendItems = items.filter((item) =>
-        item.id ? !ItemHistory.hasBeenSent(item.id) : true
+        item._id ? !ItemHistory.hasBeenSent(item.id) : true
       );
 
       const rows = unSendItems.map((item) =>
@@ -239,7 +238,7 @@ export class Format1 {
       }
 
       unSendItems.map((item) => {
-        if (item.id) {
+        if (item._id) {
           ItemHistory.markAsSent(item.id);
         }
       });

@@ -1,7 +1,7 @@
 import { DriveManager } from "../DriveManager";
 import { ProcessQueue } from "../QueueManager/processQueue";
 import { Queue } from "../QueueManager/queue";
-import { SheetManager } from "../SheetManager";
+import { SheetManager } from "../SheetManager/index";
 import { TriggerManager } from "../TriggerManager/TriggerManager";
 
 export class ConfigManger {
@@ -59,15 +59,6 @@ export class ConfigManger {
       "config",
       JSON.stringify(data)
     );
-  }
-
-  static setConfig(data: Record<string, any>) {
-    if (data["operation"] != undefined) {
-      this.processOperation(data);
-    } else {
-      this.setProperty(data);
-    }
-    return ContentService.createTextOutput("Configuration updated");
   }
 
   static getConfig() {

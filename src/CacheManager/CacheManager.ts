@@ -13,6 +13,7 @@ export class CacheManager {
     this.CACHE_DATA[key] = data;
     this.addKey(key);
   }
+
   static getCache<T>(key: string, defaultValue: T = {} as T): T {
     if (!this.CACHE_DATA) {
       this.CACHE_DATA = {};

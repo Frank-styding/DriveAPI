@@ -2,6 +2,7 @@ import { DriveCache } from "./cache";
 
 export class File {
   private constructor() {}
+
   static createFile(name: string, content: string, folderName?: string) {
     const cache = DriveCache.getCache();
     if (folderName && !cache.foldersData[folderName]) {
@@ -18,6 +19,7 @@ export class File {
     DriveCache.saveCache();
     return file;
   }
+
   static createFileBase64(
     name: string,
     base64Content: string,
@@ -43,6 +45,7 @@ export class File {
     this.saveFileID(name, file.getId());
     DriveCache.saveCache();
   }
+
   static deleteFile(folderName: string, name: string) {
     const cache = DriveCache.getCache();
     if (!cache.foldersData[folderName]) return;
@@ -53,6 +56,7 @@ export class File {
     delete cache.filesData[name];
     DriveCache.saveCache();
   }
+
   static renameFile(folderName: string, name: string, newName: string) {
     const cache = DriveCache.getCache();
     if (!cache.foldersData[folderName]) return;
@@ -64,11 +68,13 @@ export class File {
     delete cache.filesData[name];
     DriveCache.saveCache();
   }
+
   static existsFile(folderName: string, name: string) {
     const cache = DriveCache.getCache();
     if (!cache.foldersData[folderName]) return false;
     return !!cache.filesData[name];
   }
+
   static moveFile(
     sourceFolderName: string,
     toFolderName: string,

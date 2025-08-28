@@ -2,7 +2,6 @@ import json
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
 import requests
 
 # ==============================
@@ -16,56 +15,6 @@ def get_api_url():
     return "https://script.google.com/macros/s/AKfycbxOMSOO1-PT4-P7s_L8ubCPgqTLUwmBg7XYJujCxXspchoJ2btzmWvZuK4TeaEFUQiQLQ/exec"
 
 
-# Configuración inicial
-CONFIG_PAYLOAD = {
-    "type": "config",
-    "data": {
-        "folderName": "data",
-        "headers": ["inicio", "horas", "estado"],
-        "headerFormats": {
-            1: {"numberFormat": "[h]:mm:ss"},
-            2: {
-                "conditionalRules": [
-                    {"type": "textIsEmpty", "background": "white"},
-                    {
-                        "type": "textEqualTo",
-                        "value": "Trabajando",
-                        "background": "#41B451",
-                    },
-                    {"type": "textEqualTo", "value": "FIN", "background": "#389FBE"},
-                    {
-                        "type": "notEqualTo",
-                        "value": "Trabajando",
-                        "background": "#AA3636",
-                    },
-                ],
-            },
-        },
-        "rowFormulas": {
-            "fin": "=A2",
-            "horas": "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
-        },
-        "formulasFormat": {
-            "horas_trabajo": {"numberFormat": "[h]:mm:ss"},
-            "horas_almuerzo": {"numberFormat": "[h]:mm:ss"},
-        },
-        "formulas": {
-            "horas_trabajo": '=SUMIF(C2:C, "Trabajando", B2:B)',
-            "horas_almuerzo": '=SUMIF(C2:C, "Almuerzo", B2:B)',
-        },
-    },
-}
-
-CONFIG_PAYLOAD_INIT_TRIGGER = {
-    "type": "config",
-    "data": {"time": 1, "operation": "initProcessQueueTrigger"},
-}
-
-CONFIG_PAYLOAD_DELETE_TRIGGER = {
-    "type": "config",
-    "data": {"operation": "deleteTriggers"},
-}
-
 # ==============================
 # LECTURA DE ARCHIVO
 # ==============================
@@ -73,7 +22,7 @@ CONFIG_PAYLOAD_DELETE_TRIGGER = {
 
 def load_test_data(file_path="datos.txt"):
     """
-    Lee un archivo de texto con el formato:
+    Formato esperado en datos.txt:
     spreadsheet sheetName tableName inicio estado
     """
     data = []
@@ -104,24 +53,30 @@ def load_test_data(file_path="datos.txt"):
 # ==============================
 
 
-def build_queue_payload(entry, i):
+def build_batch_payload(entries, request_id=None):
+    """Construye un payload estilo sendData (bloque de items)."""
+    if not entries:
+        return None
+
+    spreadsheet = entries[0]["spreadsheet"]
+    sheetName = entries[0]["sheetName"]
+    tableName = entries[0]["tableName"]
+
     return {
-        "type": "insertFormat_1",
+        "type": "insert:format_1",
+        "timestamp": int(time.time()),
+        "id": request_id,
         "data": {
-            "spreadsheetName": entry["spreadsheet"],
-            "sheetName": entry["sheetName"],
+            "spreadsheetName": spreadsheet,
+            "sheetName": sheetName,
             "data": {
-                "tableName": entry["tableName"],
-                "tableData": {"capitan": entry["tableName"]},  # igual que tableName
+                "tableName": tableName,
+                "tableData": {"dni": tableName, "capitan": tableName},
                 "items": [
-                    {
-                        "inicio": entry["inicio"],
-                        "estado": entry["estado"],
-                    }
+                    {"inicio": e["inicio"], "estado": e["estado"]} for e in entries
                 ],
             },
         },
-        "timestamp": int(time.time() * 1000),
     }
 
 
@@ -133,28 +88,35 @@ def build_queue_payload(entry, i):
 def wait_until_ready(api_url, timeout=30):
     start = time.time()
     while time.time() - start < timeout:
-        resp = requests.post(api_url, data=json.dumps({"type": "isReady"}))
-        if resp.text.strip() == "true":
-            return True
-        time.sleep(0.1)
+        try:
+            resp = requests.post(api_url, json={"type": "isReady"})
+            json_resp = resp.json()
+            if json_resp.get("isReady") is True:
+                return True
+        except Exception:
+            pass
+        time.sleep(0.2)
     return False
 
 
-def send_request(i, entry):
+def send_batch(i, entries):
+    """Envía un lote de datos similar a sendData TS."""
     api_url = get_api_url()
     if not wait_until_ready(api_url):
         return {
-            "peticion": i + 1,
+            "batch": i + 1,
             "tiempo": 0,
             "status": 503,
             "respuesta": "Timeout esperando isReady",
         }
-    payload = build_queue_payload(entry, i)
+
+    payload = build_batch_payload(entries, request_id=f"req-{i+1}")
     start = time.time()
-    r = requests.post(api_url, data=json.dumps(payload))
+    r = requests.post(api_url, json=payload)
     end = time.time()
+
     return {
-        "peticion": i + 1,
+        "batch": i + 1,
         "tiempo": end - start,
         "status": r.status_code,
         "respuesta": r.text.strip(),
@@ -162,72 +124,43 @@ def send_request(i, entry):
 
 
 # ==============================
-# CONFIGURACIÓN DE LA APP
-# ==============================
-
-
-def config():
-    api_url = get_api_url()
-    print("⚙️ Configurando la app...")
-    resp = requests.post(api_url, data=json.dumps(CONFIG_PAYLOAD))
-    print(f"Respuesta configuración: {resp.text}")
-
-    print("⏱️ Iniciando trigger...")
-    resp = requests.post(api_url, data=json.dumps(CONFIG_PAYLOAD_INIT_TRIGGER))
-    print(f"Respuesta trigger: {resp.text}")
-
-
-def delete_trigger():
-    api_url = get_api_url()
-    print("🗑️ Eliminando triggers...")
-    resp = requests.post(api_url, data=json.dumps(CONFIG_PAYLOAD_DELETE_TRIGGER))
-    print(f"Respuesta eliminación: {resp.text}")
-
-
-def clear_cache():
-    api_url = get_api_url()
-    print("🧹 Limpiando cache...")
-    payload = {"type": "config", "data": {"operation": "clearCache"}}
-    resp = requests.post(api_url, data=json.dumps(payload))
-    print(f"Respuesta limpieza cache: {resp.text}")
-
-
-# ==============================
 # TEST SECUENCIAL Y SIMULTÁNEO
 # ==============================
 
 
-def test(data_entries):
-    print("\n--- PETICIONES SECUENCIALES ---")
+def test_batches(data_entries, batch_size=3):
+    """Agrupa entradas en lotes y los envía secuencial y simultáneamente."""
+    # Dividir datos en lotes
+    batches = [
+        data_entries[i : i + batch_size]
+        for i in range(0, len(data_entries), batch_size)
+    ]
+
+    print("\n--- ENVÍO SECUENCIAL DE LOTES ---")
     resultados = []
-    for i, entry in enumerate(data_entries):
-        res = send_request(i, entry)
+    for i, batch in enumerate(batches):
+        res = send_batch(i, batch)
         resultados.append(res)
-        print(
-            f"Petición {res['peticion']}: {res['tiempo']:.4f} s, status {res['status']}"
-        )
+        print(f"Lote {res['batch']}: {res['tiempo']:.4f}s, status {res['status']}")
 
     tiempo_total = sum(r["tiempo"] for r in resultados)
-    print(f"\nTiempo total: {tiempo_total:.4f} s")
-    print(f"Tiempo promedio: {tiempo_total/len(resultados):.4f} s")
+    print(f"\nTiempo total: {tiempo_total:.4f}s")
+    print(f"Tiempo promedio: {tiempo_total/len(resultados):.4f}s")
 
-    print("\n--- PETICIONES SIMULTÁNEAS ---")
+    print("\n--- ENVÍO SIMULTÁNEO DE LOTES ---")
     resultados_sim = []
-    with ThreadPoolExecutor(max_workers=10) as executor:
+    with ThreadPoolExecutor(max_workers=5) as executor:
         futures = [
-            executor.submit(send_request, i, entry)
-            for i, entry in enumerate(data_entries)
+            executor.submit(send_batch, i, batch) for i, batch in enumerate(batches)
         ]
         for future in as_completed(futures):
             res = future.result()
             resultados_sim.append(res)
-            print(
-                f"Petición {res['peticion']}: {res['tiempo']:.4f} s, status {res['status']}"
-            )
+            print(f"Lote {res['batch']}: {res['tiempo']:.4f}s, status {res['status']}")
 
     tiempo_total_sim = sum(r["tiempo"] for r in resultados_sim)
-    print(f"\nTiempo total simultáneo: {tiempo_total_sim:.4f} s")
-    print(f"Tiempo promedio simultáneo: {tiempo_total_sim/len(resultados_sim):.4f} s")
+    print(f"\nTiempo total simultáneo: {tiempo_total_sim:.4f}s")
+    print(f"Tiempo promedio simultáneo: {tiempo_total_sim/len(resultados_sim):.4f}s")
 
 
 # ==============================
@@ -241,19 +174,8 @@ def main():
         print("❌ No se encontraron datos en el archivo.")
         return
 
-    # Limpieza previa
-    delete_trigger()
-    clear_cache()
-
-    # Configuración y trigger
-    config()
-
-    # Ejecutar tests
-    test(data_entries)
-
-    # Espera antes de borrar el trigger (opcional)
-    time.sleep(60)
-    delete_trigger()
+    # Ejecutar tests (ej: lotes de 3 registros)
+    test_batches(data_entries, batch_size=3)
 
 
 if __name__ == "__main__":

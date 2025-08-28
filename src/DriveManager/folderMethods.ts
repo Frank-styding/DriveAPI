@@ -44,6 +44,7 @@ export class Folder {
     const cache = DriveCache.getCache();
     return cache.foldersData[name] || null;
   }
+
   static saveFolderID(name: string, id: string) {
     const cache = DriveCache.getCache();
     cache.foldersData[name] = id;
