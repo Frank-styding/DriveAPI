@@ -6,7 +6,6 @@ export class RouterManager {
     for (let i = 0; i < routes.length; i++) {
       const item = routes[i].method(body, requestId);
       if (item != null) {
-        RequestLock.setIsReady(true);
         return item;
       }
     }

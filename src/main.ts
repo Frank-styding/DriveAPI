@@ -1,9 +1,7 @@
 import { ConfigManger } from "./config/ConfigManger";
 import { DriveManager } from "./DriveManager";
 import {
-  RouteDeleteRequest,
   RouteExecute,
-  RouteExistsRequest,
   RouteInsertToQueue,
   RouteIsReady,
   RouterManager,
@@ -21,10 +19,17 @@ function doPost(e: any) {
   const requestId = `req_${Date.now()}_${Math.random()
     .toString(36)
     .substr(2, 9)}`;
-
   try {
     const body = e.postData.contents;
     const bodyJson = JSON.parse(body) as Body;
+
+    const isReady = RouterManager.executeRoute(bodyJson, requestId, [
+      RouteIsReady,
+    ]);
+
+    if (isReady) {
+      return isReady;
+    }
 
     if (!RequestLock.acquireLock(requestId)) {
       return ContentService.createTextOutput(
@@ -34,13 +39,11 @@ function doPost(e: any) {
         })
       ).setMimeType(ContentService.MimeType.JSON);
     }
+
     const data = RouterManager.executeRoute(bodyJson, requestId, [
-      RouteExistsRequest,
       RouteExecute,
       RouteSetConfig,
       RouteInsertToQueue,
-      RouteDeleteRequest,
-      RouteIsReady,
     ]);
 
     if (data) {
@@ -164,10 +167,12 @@ function clearCache() {
   DriveManager.cache.clearCache();
   SheetManager.cache.clearCache();
   QueueManager.cache.clearCache();
+  QueueManager.Queue.clearQueue();
   TriggerManager.deleteAllTriggers();
   ConfigManger.clearConfig();
   Format1.restoreFormta1Memory();
   RequestLock.clearCache();
+  console.log(RequestLock.getIsReady());
 }
 /* 
 function doPost(e: any) {
