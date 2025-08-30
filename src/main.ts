@@ -7,6 +7,8 @@ import {
   RouterManager,
   RouteSetConfig,
 } from "./methods";
+import { RouteGetUser } from "./methods/getUser";
+import { RouteLogin } from "./methods/login";
 import { Body } from "./methods/Route";
 import { QueueManager } from "./QueueManager";
 import { RequestLock } from "./RequestLock/RequestLock";
@@ -23,12 +25,14 @@ function doPost(e: any) {
     const body = e.postData.contents;
     const bodyJson = JSON.parse(body) as Body;
 
-    const isReady = RouterManager.executeRoute(bodyJson, requestId, [
+    const unlockData = RouterManager.executeRoute(bodyJson, requestId, [
       RouteIsReady,
+      RouteGetUser,
+      RouteLogin,
     ]);
 
-    if (isReady) {
-      return isReady;
+    if (unlockData) {
+      return unlockData;
     }
 
     if (!RequestLock.acquireLock(requestId)) {

@@ -1,5 +1,6 @@
 import { SheetCache } from "./cache";
 import { FormulaProcessor } from "./formula";
+import { Spreadsheet } from "./spreadsheet";
 
 export class Row {
   private constructor() {}
@@ -9,9 +10,10 @@ export class Row {
     rowData: Record<string, any>
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     const headers = sheet
@@ -27,10 +29,12 @@ export class Row {
     rowsData: Record<string, any>[]
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
+
     if (!sheet) throw new Error("Sheet does not exist.");
     const headers = sheet
       .getRange(1, 1, 1, sheet.getLastColumn())
@@ -45,9 +49,11 @@ export class Row {
   }
   static deleteRow(spreadsheetName: string, sheetName: string, id: number) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
+
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     const lastRow = sheet.getLastRow();
@@ -64,9 +70,11 @@ export class Row {
     rowData: Record<string, any>
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
+
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     const lastRow = sheet.getLastRow();
@@ -89,9 +97,11 @@ export class Row {
     id: number
   ): Record<string, any> {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return {};
+
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     const lastRow = sheet.getLastRow();
@@ -116,9 +126,11 @@ export class Row {
     searchedCriteriaObject: Record<string, any>
   ): Record<string, any> {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return {};
+
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     const lastRow = sheet.getLastRow();
@@ -146,10 +158,12 @@ export class Row {
   }
   static getMaxRow(spreadsheetName: string, sheetName: string, col: number) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId)
       throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return 0;
+
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
     return sheet
@@ -164,11 +178,12 @@ export class Row {
     rows: string[][]
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId)
       throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
 
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
 
@@ -204,5 +219,25 @@ export class Row {
     sheet
       .getRange(startRow, startCol, values.length, values[0].length)
       .setValues(values);
+  }
+  static getCell(
+    spreadsheetName: string,
+    sheetName: string,
+    row: number,
+    col: number
+  ): any {
+    const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
+    if (!spreadsheetId)
+      throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
+
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return null;
+
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
+
+    const value = sheet.getRange(row, col).getValue();
+    return value;
   }
 }

@@ -49,4 +49,36 @@ export class Folder {
     const cache = DriveCache.getCache();
     cache.foldersData[name] = id;
   }
+
+  static findFolder(
+    folderName: string,
+    createIfNotExists: boolean = false
+  ): GoogleAppsScript.Drive.Folder | null {
+    const cache = DriveCache.getCache();
+
+    // Si ya está en el cache, devolverla
+    if (cache.foldersData[folderName]) {
+      return DriveApp.getFolderById(cache.foldersData[folderName]);
+    }
+
+    // Buscar entre todas las carpetas
+    const folders = DriveApp.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      const folder = folders.next();
+      cache.foldersData[folderName] = folder.getId();
+      DriveCache.saveCache();
+      return folder;
+    }
+
+    // Si no existe y se indica crear, crearla
+    if (createIfNotExists) {
+      const folder = DriveApp.createFolder(folderName);
+      cache.foldersData[folderName] = folder.getId();
+      DriveCache.saveCache();
+      return folder;
+    }
+
+    // No existe
+    return null;
+  }
 }

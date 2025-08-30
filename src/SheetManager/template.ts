@@ -1,5 +1,6 @@
 import { SheetCache } from "./cache";
 import { FormulaProcessor } from "./formula";
+import { Spreadsheet } from "./spreadsheet";
 
 export interface IFormat {
   col?: number;
@@ -35,10 +36,11 @@ export class Template {
     formats: IFormat[]
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId)
       throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
     // Get existing conditional rules from the sheet
@@ -147,10 +149,11 @@ export class Template {
     }[] = []
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId)
       throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
     if (!template || template.length === 0 || !template[0].length) {

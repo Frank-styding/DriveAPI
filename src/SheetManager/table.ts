@@ -1,4 +1,5 @@
 import { SheetCache } from "./cache";
+import { Spreadsheet } from "./spreadsheet";
 
 export class Table {
   private constructor() {}
@@ -8,9 +9,10 @@ export class Table {
     columns: string[]
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     if (sheet.getLastRow() > 0) {
@@ -34,9 +36,11 @@ export class Table {
     headers: string[]
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
+
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     sheet.getRange(1, startCol, 1, headers.length).setFormulas([headers]);
@@ -52,11 +56,12 @@ export class Table {
     ascending: boolean
   ) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[spreadsheetName];
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId)
       throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
 
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet)
       throw new Error(
@@ -70,5 +75,150 @@ export class Table {
     const numRows = lastRow - startRow + 1;
     const range = sheet.getRange(startRow, startCol, numRows, columns);
     range.sort({ column: columnIndex - 1 + startCol, ascending });
+  }
+  static getTable(
+    spreadsheetName: string,
+    sheetName: string
+  ): Record<string, any>[] {
+    const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
+    if (!spreadsheetId)
+      throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
+
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+
+    if (!spreadsheet) return [];
+
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
+
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    if (lastRow < 2) return []; // no hay datos (solo headers o vacío)
+
+    // Leer encabezados
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+    // Leer todas las filas de datos
+    const dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol);
+    const dataValues = dataRange.getValues();
+
+    // Mapear filas a objetos {header: valor}
+    return dataValues.map((row) => {
+      const rowData: Record<string, any> = {};
+      headers.forEach((header, index) => {
+        rowData[header] = row[index];
+      });
+      return rowData;
+    });
+  }
+  static buildColumnIndex(
+    spreadsheetName: string,
+    sheetName: string,
+    columnIndex: number,
+    blockSize = 100
+  ) {
+    const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
+    if (!spreadsheetId) return;
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) return;
+    const lastRow = sheet.getLastRow();
+    const values = sheet
+      .getRange(2, columnIndex, lastRow - 1)
+      .getValues()
+      .flat();
+    const rows = values.map((val, i) => ({ val, row: i + 2 }));
+    rows.sort((a, b) => String(a.val).localeCompare(String(b.val)));
+
+    const blocks: {
+      min: string | number;
+      max: string | number;
+      startRow: number;
+      endRow: number;
+    }[] = [];
+
+    for (let i = 0; i < rows.length; i += blockSize) {
+      const chunk = rows.slice(i, i + blockSize);
+      blocks.push({
+        min: chunk[0].val,
+        max: chunk[chunk.length - 1].val,
+        startRow: chunk[0].row,
+        endRow: chunk[chunk.length - 1].row,
+      });
+    }
+
+    SheetCache.saveIndex(
+      spreadsheetName,
+      sheetName,
+      `col_${columnIndex}`,
+      blocks
+    );
+    SheetCache.saveCache();
+  }
+
+  static findByColumnValue(
+    spreadsheetName: string,
+    sheetName: string,
+    columnName: string,
+    value: string | number
+  ): Record<string, any> | null {
+    // Obtener tabla desde cache
+    const table = this.getCachedTable(spreadsheetName, sheetName);
+    if (!table.length) return null;
+
+    // Buscar la primera fila que coincida
+    const row = table.find((r) => r[columnName] == value);
+    return row || null;
+  }
+  static getCachedTable(
+    spreadsheetName: string,
+    sheetName: string
+  ): Record<string, any>[] {
+    const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
+    if (!spreadsheetId)
+      throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
+
+    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return [];
+
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
+
+    //// Verificar si ya tenemos cache de esta hoja
+    //if (!cache.tableCache) cache.tableCache = {};
+    //if (
+    //  cache.tableCache[spreadsheetId]?.[sheetName] &&
+    //  !Spreadsheet.hasSpreadsheetChanged(spreadsheetName)
+    //) {
+    //  // Retornar cache existente
+    //  return cache.tableCache[spreadsheetId][sheetName];
+    //}
+
+    // Leer headers
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+    if (lastRow < 2) return []; // no hay datos
+
+    const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+    const dataValues = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+
+    // Mapear filas
+    const tableData = dataValues.map((row) => {
+      const rowData: Record<string, any> = {};
+      headers.forEach((header, index) => {
+        rowData[header] = row[index];
+      });
+      return rowData;
+    });
+    //// Guardar en cache
+    //if (!cache.tableCache[spreadsheetId]) cache.tableCache[spreadsheetId] = {};
+    //cache.tableCache[spreadsheetId][sheetName] = tableData;
+    //SheetCache.saveCache();
+
+    return tableData;
   }
 }

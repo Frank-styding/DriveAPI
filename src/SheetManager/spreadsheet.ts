@@ -1,15 +1,42 @@
 import { DriveManager } from "../DriveManager";
 import { SheetCache } from "./cache";
-import { Sheet } from "./sheet";
 
 export class Spreadsheet {
   private constructor() {}
+  private static spreadsheetInstances: Map<
+    string,
+    GoogleAppsScript.Spreadsheet.Spreadsheet
+  >;
+  static init() {
+    if (!this.spreadsheetInstances) {
+      this.spreadsheetInstances = new Map();
+    }
+  }
+  static getSpreadsheet(
+    spreadsheetId: string
+  ): GoogleAppsScript.Spreadsheet.Spreadsheet | null {
+    this.init();
+    if (this.spreadsheetInstances.has(spreadsheetId)) {
+      return this.spreadsheetInstances.get(spreadsheetId)!;
+    }
+
+    /*  const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[name];
+    if (!spreadsheetId) {
+      return null;
+    } */
+
+    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    this.spreadsheetInstances.set(spreadsheetId, spreadsheet);
+    return spreadsheet;
+  }
+
   static createSpreadsheet(name: string, folderName?: string) {
     const cache = SheetCache.getCache();
-    if (cache.spreadsheetsData[name]) return;
+    if (cache.spreadsheets[name]) return;
     const spreadsheet = SpreadsheetApp.create(name);
     if (folderName) {
-      let folderId = DriveManager.Folder.getFolderID(folderName);
+      let folderId = DriveManager.Folder.findFolder(folderName, true)?.getId();
       if (!folderId) {
         folderId = DriveManager.Folder.createFolder(
           folderName
@@ -27,39 +54,69 @@ export class Spreadsheet {
 
   static deleteSpreadsheet(name: string) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[name];
+    const spreadsheetId = cache.spreadsheets[name];
     if (!spreadsheetId) return;
     DriveApp.getFileById(spreadsheetId).setTrashed(true);
-    delete cache.spreadsheetsData[name];
+    delete cache.spreadsheets[name];
     SheetCache.saveCache();
   }
 
   static renameSpreadsheet(name: string, newName: string) {
     const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheetsData[name];
+    const spreadsheetId = cache.spreadsheets[name];
     if (!spreadsheetId) return;
-    const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
+    const spreadsheet = this.getSpreadsheet(spreadsheetId);
+    if (!spreadsheet) return;
     spreadsheet.rename(newName);
-    cache.spreadsheetsData[newName] = spreadsheetId;
-    delete cache.spreadsheetsData[name];
+    cache.spreadsheets[newName] = spreadsheetId;
+    delete cache.spreadsheets[name];
     SheetCache.saveCache();
   }
 
   static existsSpreadsheet(name: string) {
     const cache = SheetCache.getCache();
-    return !!cache.spreadsheetsData[name];
+    return !!cache.spreadsheets[name];
   }
   static getSpreadsheetData(name: string) {
     const cache = SheetCache.getCache();
 
-    const spreadsheetId = cache.spreadsheetsData[name];
+    const spreadsheetId = cache.spreadsheets[name];
     if (!spreadsheetId) return;
-    return SpreadsheetApp.openById(spreadsheetId);
+    return this.getSpreadsheet(spreadsheetId);
   }
 
   static saveSpreadsheetID(name: string, id: string) {
     const cache = SheetCache.getCache();
-    cache.spreadsheetsData[name] = id;
+    cache.spreadsheets[name] = id;
     SheetCache.saveCache();
+  }
+  static registerSpreadsheet(name: string) {
+    const cache = SheetCache.getCache();
+    if (cache.spreadsheets[name]) {
+      return cache.spreadsheets[name];
+    }
+    const files = DriveApp.searchFiles(
+      `title = '${name}' and mimeType = 'application/vnd.google-apps.spreadsheet'`
+    );
+    if (files.hasNext()) {
+      const file = files.next();
+      const id = file.getId();
+      this.saveSpreadsheetID(name, id);
+      SheetCache.saveCache();
+      return id;
+    }
+    return null;
+  }
+  static hasSpreadsheetChanged(spreadsheetName: string): boolean {
+    const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[spreadsheetName];
+    if (!spreadsheetId)
+      throw new Error(`Spreadsheet "${spreadsheetName}" does not exist.`);
+    const file = DriveApp.getFileById(spreadsheetId);
+    const lastUpdatedMs = file.getLastUpdated().getTime();
+    const prev = cache.spreadsheetLastUpdates[spreadsheetId] || 0;
+    cache.spreadsheetLastUpdates[spreadsheetId] = lastUpdatedMs;
+
+    return prev != lastUpdatedMs;
   }
 }
