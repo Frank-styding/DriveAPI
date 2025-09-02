@@ -111,14 +111,14 @@ function init() {
             background: "#389FBE",
           },
           {
-            type: "notEqualTo",
-            value: "trabajando",
-            background: "#AA3636",
+            type: "textEqualTo",
+            value: "no trabajando",
+            background: "#3855be",
           },
           {
             type: "notEqualTo",
-            value: "translado de fundo",
-            background: "#389FBE",
+            value: "trabajando",
+            background: "#AA3636",
           },
         ],
       },
@@ -152,6 +152,9 @@ function init() {
       repaso: {
         numberFormat: "[h]:mm:ss",
       },
+      "no trabajando": {
+        numberFormat: "[h]:mm:ss",
+      },
       total_paros: {
         numberFormat: "[h]:mm:ss",
       },
@@ -165,7 +168,8 @@ function init() {
       charlas: '=SUMIF(C2:C, "charla", B2:B)',
       pausas: '=SUMIF(C2:C, "pausa", B2:B)',
       repaso: '=SUMIF(C2:C, "repaso", B2:B)',
-      total_paros: "=SUM(E3:E10)",
+      "no trabajando": '=SUMIF(C2:C, "no trabajando", B2:B)',
+      total_paros: "=SUM(E3:E11)",
     },
     appConfig: {
       buttons: [
