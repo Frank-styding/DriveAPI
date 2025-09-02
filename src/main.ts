@@ -8,6 +8,7 @@ import {
   RouteSetConfig,
 } from "./methods";
 import { RouteAppConfig } from "./methods/getAppConfig";
+import { RouteGetImage } from "./methods/getImage";
 import { RouteGetUser } from "./methods/getUser";
 import { RouteLogin } from "./methods/login";
 import { Body } from "./methods/Route";
@@ -30,6 +31,7 @@ function doPost(e: any) {
       RouteIsReady,
       RouteGetUser,
       RouteLogin,
+      RouteGetImage,
       RouteAppConfig,
     ]);
 
@@ -84,6 +86,10 @@ function init() {
   ConfigManger.setProperty({
     folderName: "data",
     headers: ["inicio", "horas", "estado"],
+    usersSpreadsheet: "capitanes_data",
+    usersSheet: "Capitanes",
+    passwordSheet: "Contraseña",
+    imagesFolder: "imagenes_capitanes",
     headerFormats: {
       1: {
         numberFormat: "[h]:mm:ss",
@@ -159,7 +165,7 @@ function init() {
       charlas: '=SUMIF(C2:C, "charla", B2:B)',
       pausas: '=SUMIF(C2:C, "pausa", B2:B)',
       repaso: '=SUMIF(C2:C, "repaso", B2:B)',
-      total_paros: "=SUM(E3:E11)",
+      total_paros: "=SUM(E3:E10)",
     },
     appConfig: {
       buttons: [

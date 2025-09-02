@@ -112,52 +112,6 @@ export class Table {
       return rowData;
     });
   }
-  static buildColumnIndex(
-    spreadsheetName: string,
-    sheetName: string,
-    columnIndex: number,
-    blockSize = 100
-  ) {
-    const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheets[spreadsheetName];
-    if (!spreadsheetId) return;
-    const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
-    if (!spreadsheet) return;
-    const sheet = spreadsheet.getSheetByName(sheetName);
-    if (!sheet) return;
-    const lastRow = sheet.getLastRow();
-    const values = sheet
-      .getRange(2, columnIndex, lastRow - 1)
-      .getValues()
-      .flat();
-    const rows = values.map((val, i) => ({ val, row: i + 2 }));
-    rows.sort((a, b) => String(a.val).localeCompare(String(b.val)));
-
-    const blocks: {
-      min: string | number;
-      max: string | number;
-      startRow: number;
-      endRow: number;
-    }[] = [];
-
-    for (let i = 0; i < rows.length; i += blockSize) {
-      const chunk = rows.slice(i, i + blockSize);
-      blocks.push({
-        min: chunk[0].val,
-        max: chunk[chunk.length - 1].val,
-        startRow: chunk[0].row,
-        endRow: chunk[chunk.length - 1].row,
-      });
-    }
-
-    SheetCache.saveIndex(
-      spreadsheetName,
-      sheetName,
-      `col_${columnIndex}`,
-      blocks
-    );
-    SheetCache.saveCache();
-  }
 
   static findByColumnValue(
     spreadsheetName: string,
@@ -188,25 +142,43 @@ export class Table {
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error(`Sheet "${sheetName}" does not exist.`);
 
-    //// Verificar si ya tenemos cache de esta hoja
-    //if (!cache.tableCache) cache.tableCache = {};
-    //if (
-    //  cache.tableCache[spreadsheetId]?.[sheetName] &&
-    //  !Spreadsheet.hasSpreadsheetChanged(spreadsheetName)
-    //) {
-    //  // Retornar cache existente
-    //  return cache.tableCache[spreadsheetId][sheetName];
-    //}
+    const hasChanged = Spreadsheet.hasSpreadsheetChanged(spreadsheetName);
+    let tableData: Record<string, any>[] = [];
+    if (hasChanged || !cache.tableCache[spreadsheetName]?.[sheetName]) {
+      const lastRow = sheet.getLastRow();
+      const lastCol = sheet.getLastColumn();
+      const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+      if (lastRow < 2) return []; // no hay datos
+      const dataValues = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+      if (!cache.tableCache[spreadsheetName])
+        cache.tableCache[spreadsheetName] = {};
+      if (!cache.tableCache[spreadsheetName][sheetName])
+        cache.tableCache[spreadsheetName][sheetName] = [];
+      tableData = dataValues.map((row) => {
+        const rowData: Record<string, any> = {};
+        headers.forEach((header, index) => {
+          rowData[header] = row[index];
+        });
+        return rowData;
+      });
+      cache.tableCache[spreadsheetName][sheetName] = tableData;
+      SheetCache.saveCache();
+    } else {
+      tableData = cache.tableCache[spreadsheetName][sheetName];
+    }
 
-    // Leer headers
+    /* 
+    
+    //---------------------------------------------------------------------------
+    
     const lastRow = sheet.getLastRow();
     const lastCol = sheet.getLastColumn();
     if (lastRow < 2) return []; // no hay datos
 
     const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
     const dataValues = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    //---------------------------------------------------------------------------
 
-    // Mapear filas
     const tableData = dataValues.map((row) => {
       const rowData: Record<string, any> = {};
       headers.forEach((header, index) => {
@@ -214,11 +186,9 @@ export class Table {
       });
       return rowData;
     });
-    //// Guardar en cache
-    //if (!cache.tableCache[spreadsheetId]) cache.tableCache[spreadsheetId] = {};
-    //cache.tableCache[spreadsheetId][sheetName] = tableData;
-    //SheetCache.saveCache();
 
+    return tableData;
+    */
     return tableData;
   }
 }

@@ -1,3 +1,4 @@
+import { ConfigManger } from "../config/ConfigManger";
 import { RequestLock } from "../RequestLock/RequestLock";
 import { SheetManager } from "../SheetManager";
 import { Body, Route } from "./Route";
@@ -6,39 +7,33 @@ interface BodyData {
   dni: string;
 }
 
-export const spreadsheetName = "capitanes_data";
+/* export const spreadsheetName = "capitanes_data";
 export const sheetName = "Capitanes";
-export const sheetName1 = "Contraseña";
+export const sheetName1 = "Contraseña"; */
 export class RouteGetUser extends Route {
   static override method(body: Body<BodyData>, requestId: string) {
     if (body.type !== "getUser") return null;
-    SheetManager.Spreadsheet.registerSpreadsheet(spreadsheetName);
-    /*     if (!SheetManager.Spreadsheet.existsSpreadsheet(spreadsheetName)) {
-      SheetManager.Spreadsheet.createSpreadsheet(spreadsheetName);
-      SheetManager.Sheet.createSheet(spreadsheetName, sheetName);
-      SheetManager.Sheet.createSheet(spreadsheetName, sheetName1);
-      SheetManager.Sheet.deleteSheet(spreadsheetName, "Hoja 1");
-      SheetManager.Table.createtTable(spreadsheetName, sheetName, [
-        "dni",
-        "nombre",
-      ]);
-      SheetManager.Template.createWithTemplate(
-        spreadsheetName,
-        sheetName1,
-        1,
-        1,
-        [["Contraseña", ""]]
-      );
+    const config = ConfigManger.getConfig();
+
+    const spreadsheetName = config["usersSpreadsheet"];
+    const usersSheet = config["usersSheet"];
+    const passwordSheet = config["passwordSheet"];
+
+    if (!SheetManager.Spreadsheet.registerSpreadsheet(spreadsheetName)) {
+      return ContentService.createTextOutput(
+        JSON.stringify({
+          success: false,
+        })
+      ).setMimeType(ContentService.MimeType.JSON);
     }
-    if (SheetManager.Spreadsheet.hasSpreadsheetChanged(spreadsheetName)) {
-      SheetManager.Table.buildColumnIndex(spreadsheetName, sheetName, 1);
-    } */
+
     const row = SheetManager.Table.findByColumnValue(
       spreadsheetName,
-      sheetName,
+      usersSheet,
       "dni",
       body.data.dni
     );
+
     return ContentService.createTextOutput(
       JSON.stringify({
         success: true,

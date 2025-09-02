@@ -195,11 +195,7 @@ export class Format1 {
     }
 
     Object.entries(groupDataByTable).forEach(([tableName, items]) => {
-      const unSendItems = items.filter((item) =>
-        item._id ? !ItemHistory.hasBeenSent(item.id) : true
-      );
-
-      const rows = unSendItems.map((item) =>
+      const rows = items.map((item) =>
         headers.map((header) => {
           if (item.hasOwnProperty(header)) {
             return item[header];
@@ -210,6 +206,18 @@ export class Format1 {
           return "";
         })
       );
+
+      // filter for vavlid DNI---------
+      /*       const dni = tableData[tableName]["dni"];
+      const row = SheetManager.Table.findByColumnValue(
+        spreadsheetName,
+        sheetName,
+        "dni",
+        dni
+      );
+      if (!row) return; */
+      //------------------------------
+
       this.createFormat1Table(
         spreadsheetName,
         sheetName,
@@ -236,12 +244,6 @@ export class Format1 {
           true
         );
       }
-
-      unSendItems.map((item) => {
-        if (item._id) {
-          ItemHistory.markAsSent(item.id);
-        }
-      });
     });
   }
 }

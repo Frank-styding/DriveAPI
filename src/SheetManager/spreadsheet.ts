@@ -20,12 +20,6 @@ export class Spreadsheet {
       return this.spreadsheetInstances.get(spreadsheetId)!;
     }
 
-    /*  const cache = SheetCache.getCache();
-    const spreadsheetId = cache.spreadsheets[name];
-    if (!spreadsheetId) {
-      return null;
-    } */
-
     const spreadsheet = SpreadsheetApp.openById(spreadsheetId);
     this.spreadsheetInstances.set(spreadsheetId, spreadsheet);
     return spreadsheet;
@@ -112,7 +106,7 @@ export class Spreadsheet {
     const lastUpdatedMs = file.getLastUpdated().getTime();
     const prev = cache.spreadsheetLastUpdates[spreadsheetId] || 0;
     cache.spreadsheetLastUpdates[spreadsheetId] = lastUpdatedMs;
-
+    SheetCache.saveCache();
     return prev != lastUpdatedMs;
   }
 }

@@ -6,15 +6,6 @@ interface ISheetCache {
   spreadsheets: Record<string, string>; // name -> spreadsheetId
   spreadsheetLastUpdates: Record<string, number>; // spreadsheetId -> last update
   tableCache: Record<string, Record<string, Record<string, any>[]>>; // spreadsheetId → sheetName → filas
-  indexes: Record<
-    string,
-    {
-      [sheetName: string]: {
-        type: string;
-        data: any;
-      };
-    }
-  >; // spreadsheetId -> sheetName -> index info
   lastUpdated: number;
 }
 
@@ -29,7 +20,7 @@ export class SheetCache {
       lastUpdated: 0,
       spreadsheetLastUpdates: {},
       tableCache: {},
-      indexes: {},
+      /* indexes: {}, */
     });
     return this.SHEET_CACHE;
   }
@@ -41,7 +32,7 @@ export class SheetCache {
 
       lastUpdated: 0,
       spreadsheetLastUpdates: {},
-      indexes: {},
+      /*  indexes: {}, */
     });
   }
 
@@ -56,25 +47,6 @@ export class SheetCache {
     return this.SHEET_CACHE.spreadsheets[name];
   }
 
-  // --- Indexes ---
-  static saveIndex(
-    spreadsheetId: string,
-    sheetName: string,
-    type: string,
-    data: any
-  ) {
-    this.getCache();
-    if (!this.SHEET_CACHE.indexes[spreadsheetId]) {
-      this.SHEET_CACHE.indexes[spreadsheetId] = {};
-    }
-    this.SHEET_CACHE.indexes[spreadsheetId][sheetName] = { type, data };
-  }
-
-  static getIndex(spreadsheetId: string, sheetName: string) {
-    this.getCache();
-    return this.SHEET_CACHE.indexes[spreadsheetId]?.[sheetName];
-  }
-
   // --- Utility ---
   static clearCache() {
     this.SHEET_CACHE = {
@@ -82,7 +54,6 @@ export class SheetCache {
       tableCache: {},
       lastUpdated: 0,
       spreadsheetLastUpdates: {},
-      indexes: {},
     };
     CacheManager.clearCache(SHEET_KEY);
   }

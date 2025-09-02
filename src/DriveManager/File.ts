@@ -3,6 +3,74 @@ import { DriveCache } from "./cache";
 export class File {
   private constructor() {}
 
+  static getImageData(
+    fileName: string,
+    folderName?: string
+  ): { base64: string; mimeType: string } | null {
+    const cache = DriveCache.getCache();
+
+    try {
+      let folderId: string | null = null;
+      if (folderName) {
+        if (!cache.foldersData[folderName]) {
+          const folders = DriveApp.getFoldersByName(folderName);
+          if (folders.hasNext()) {
+            const folder = folders.next();
+            cache.foldersData[folderName] = folder.getId();
+            DriveCache.saveCache();
+            folderId = folder.getId();
+          } else {
+            return null;
+          }
+        } else {
+          folderId = cache.foldersData[folderName];
+        }
+      }
+
+      let fileId = cache.filesData[fileName];
+      let file: GoogleAppsScript.Drive.File;
+
+      if (!fileId) {
+        let fileIterator: GoogleAppsScript.Drive.FileIterator;
+
+        if (folderId) {
+          const folder = DriveApp.getFolderById(folderId);
+          fileIterator = folder.getFilesByName(fileName);
+        } else {
+          fileIterator = DriveApp.getFilesByName(fileName);
+        }
+
+        if (fileIterator.hasNext()) {
+          file = fileIterator.next();
+          fileId = file.getId();
+
+          this.saveFileID(fileName, fileId);
+          DriveCache.saveCache();
+        } else {
+          return null;
+        }
+      } else {
+        file = DriveApp.getFileById(fileId);
+      }
+
+      const mimeType = file.getMimeType();
+      if (!mimeType.startsWith("image/")) {
+        return null;
+      }
+      const blob = file.getBlob();
+      const bytes = blob.getBytes();
+      const base64Data = Utilities.base64Encode(bytes);
+
+      return {
+        base64: base64Data,
+        mimeType: mimeType,
+      };
+    } catch (error) {
+      console.error(`Error obteniendo imagen ${fileName}: ${error}`);
+      return null;
+    }
+  }
+
   static createFile(name: string, content: string, folderName?: string) {
     const cache = DriveCache.getCache();
     if (folderName && !cache.foldersData[folderName]) {
