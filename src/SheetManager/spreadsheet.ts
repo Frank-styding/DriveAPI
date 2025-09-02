@@ -36,14 +36,10 @@ export class Spreadsheet {
     if (cache.spreadsheets[name]) return;
     const spreadsheet = SpreadsheetApp.create(name);
     if (folderName) {
-      let folderId = DriveManager.Folder.findFolder(folderName, true)?.getId();
-      if (!folderId) {
-        folderId = DriveManager.Folder.createFolder(
-          folderName
-        )?.getId() as string;
-      }
-      if (!folderId) throw new Error(`Folder ${folderName} does not exist.`);
-      const folder = DriveApp.getFolderById(folderId);
+      let folder = DriveManager.Folder.findFolder(
+        folderName,
+        true
+      ) as GoogleAppsScript.Drive.Folder;
       const file = DriveApp.getFileById(spreadsheet.getId());
       folder.addFile(file);
       DriveApp.getRootFolder().removeFile(file);

@@ -7,6 +7,7 @@ import {
   RouterManager,
   RouteSetConfig,
 } from "./methods";
+import { RouteAppConfig } from "./methods/getAppConfig";
 import { RouteGetUser } from "./methods/getUser";
 import { RouteLogin } from "./methods/login";
 import { Body } from "./methods/Route";
@@ -17,7 +18,7 @@ import { Format1 } from "./templates/Format1";
 import { TriggerManager } from "./TriggerManager/TriggerManager";
 
 function doPost(e: any) {
-  init();
+  if (Object.keys(ConfigManger.getConfig()).length == 0) init();
   const requestId = `req_${Date.now()}_${Math.random()
     .toString(36)
     .substr(2, 9)}`;
@@ -29,6 +30,7 @@ function doPost(e: any) {
       RouteIsReady,
       RouteGetUser,
       RouteLogin,
+      RouteAppConfig,
     ]);
 
     if (unlockData) {
@@ -79,92 +81,150 @@ function triggerFunc() {
 }
 
 function init() {
-  if (Object.keys(ConfigManger.getConfig()).length == 0) {
-    ConfigManger.setProperty({
-      folderName: "data",
-      headers: ["inicio", "horas", "estado"],
-      headerFormats: {
-        1: {
-          numberFormat: "[h]:mm:ss",
-        },
-        2: {
-          conditionalRules: [
-            {
-              type: "textIsEmpty",
-              background: "white",
-            },
-            {
-              type: "textEqualTo",
-              value: "trabajando",
-              background: "#41B451",
-            },
-            {
-              type: "textEqualTo",
-              value: "fin jornada",
-              background: "#389FBE",
-            },
-            {
-              type: "notEqualTo",
-              value: "trabajando",
-              background: "#AA3636",
-            },
-          ],
-        },
+  ConfigManger.setProperty({
+    folderName: "data",
+    headers: ["inicio", "horas", "estado"],
+    headerFormats: {
+      1: {
+        numberFormat: "[h]:mm:ss",
       },
-      rowFormulas: {
-        fin: "=A2",
-        horas: "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
+      2: {
+        conditionalRules: [
+          {
+            type: "textIsEmpty",
+            background: "white",
+          },
+          {
+            type: "textEqualTo",
+            value: "trabajando",
+            background: "#41B451",
+          },
+          {
+            type: "textEqualTo",
+            value: "fin jornada",
+            background: "#389FBE",
+          },
+          {
+            type: "notEqualTo",
+            value: "trabajando",
+            background: "#AA3636",
+          },
+          {
+            type: "notEqualTo",
+            value: "translado de fundo",
+            background: "#389FBE",
+          },
+        ],
       },
-      formulasFormat: {
-        trabajo: {
-          numberFormat: "[h]:mm:ss",
-        },
-        falta_matriales: {
-          numberFormat: "[h]:mm:ss",
-        },
-        translado_interno: {
-          numberFormat: "[h]:mm:ss",
-        },
-        problemas_climaticos: {
-          numberFormat: "[h]:mm:ss",
-        },
+    },
+    rowFormulas: {
+      fin: "=A2",
+      horas: "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
+    },
+    formulasFormat: {
+      "horas trabajadas": {
+        numberFormat: "[h]:mm:ss",
+      },
+      falta_matriales: {
+        numberFormat: "[h]:mm:ss",
+      },
+      translado_interno: {
+        numberFormat: "[h]:mm:ss",
+      },
+      problemas_climaticos: {
+        numberFormat: "[h]:mm:ss",
+      },
+      almuerzo: {
+        numberFormat: "[h]:mm:ss",
+      },
+      charlas: {
+        numberFormat: "[h]:mm:ss",
+      },
+      pausas: {
+        numberFormat: "[h]:mm:ss",
+      },
+      repaso: {
+        numberFormat: "[h]:mm:ss",
+      },
+      total_paros: {
+        numberFormat: "[h]:mm:ss",
+      },
+    },
+    formulas: {
+      "horas trabajadas": '=SUMIF(C2:C, "trabajando", B2:B)',
+      falta_matriales: '=SUMIF(C2:C, "materiales", B2:B)',
+      translado_interno: '=SUMIF(C2:C, "traslado interno", B2:B)',
+      problemas_climaticos: '=SUMIF(C2:C, "problemas climaticos", B2:B)',
+      almuerzo: '=SUMIF(C2:C, "almuerzo", B2:B)',
+      charlas: '=SUMIF(C2:C, "charla", B2:B)',
+      pausas: '=SUMIF(C2:C, "pausa", B2:B)',
+      repaso: '=SUMIF(C2:C, "repaso", B2:B)',
+      total_paros: "=SUM(E3:E11)",
+    },
+    appConfig: {
+      buttons: [
+        { label: "Almuerzo", value: "almuerzo" },
+        { label: "Falta de materiales", value: "materiales" },
+        { label: "Traslados internos", value: "traslado interno" },
+        { label: "Causas climatológicas", value: "problemas climaticos" },
+        { label: "Charlas & Reuniones", value: "charla" },
+        { label: "Pausas Activas", value: "pausa activa" },
+        { label: "Repaso", value: "repaso" },
+      ],
+
+      select_options: [
+        { label: "N°1", value: "1" },
+        { label: "N°2", value: "2" },
+        { label: "N°3", value: "3" },
+        { label: "N°4", value: "4" },
+        { label: "N°5", value: "5" },
+        { label: "N°6", value: "6" },
+      ],
+      messages: {
         almuerzo: {
-          numberFormat: "[h]:mm:ss",
+          title: "¡Disfruta del almuerzo, Capitán!",
+          message: `Recargar energías es la mejor inversión
+para una tarde productiva.
+¡Te esperamos!`,
         },
-        charlas: {
-          numberFormat: "[h]:mm:ss",
+        materiales: {
+          title: "¡Material en camino, Capitán!",
+          message: `En unos minutos tu equipo volverá
+a la acción con todo lo necesario.`,
         },
-        pausas: {
-          numberFormat: "[h]:mm:ss",
-        },
-        materia_prima: {
-          numberFormat: "[h]:mm:ss",
+        charla: {
+          title: "¡Un momento de estrategia, Capitán!",
+          message: `Tu equipo está planificando los siguientes pasos. La comunicación es la base del éxito.`,
         },
         repaso: {
-          numberFormat: "[h]:mm:ss",
+          title: "¡Capitán, un momento de reflexión!",
+          message: `El equipo está revisando los detalles. Analizar el día es clave para mejorar mañana.`,
         },
-        total_paros: {
-          numberFormat: "[h]:mm:ss",
+        "traslado interno": {
+          title: "¡En movimiento, Capitán!",
+          message: `El equipo se está trasladando. 
+¡La productividad no se detiene!`,
+        },
+        "problemas climaticos": {
+          title: "¡Una breve pausa, Capitán!",
+          message: `El clima manda en el campo, 
+pero el equipo está listo para continuar 
+en cuanto el cielo lo permita.`,
+        },
+        "pausa activa": {
+          title: `Recuerda, Capitán: 
+¡Cuerpo sano, mente sana!`,
+          message: `El equipo está en su pausa activa. Unos minutos 
+de estiramiento y a seguir con la jornada.`,
         },
       },
-      formulas: {
-        trabajo: '=SUMIF(C2:C, "trabajando", B2:B)',
-        falta_matriales: '=SUMIF(C2:C, "materiales", B2:B)',
-        translado_interno: '=SUMIF(C2:C, "traslado interno", B2:B)',
-        problemas_climaticos: '=SUMIF(C2:C, "problemas climaticos", B2:B)',
-        almuerzo: '=SUMIF(C2:C, "almuerzo", B2:B)',
-        charlas: '=SUMIF(C2:C, "charla", B2:B)',
-        pausas: '=SUMIF(C2:C, "pausa", B2:B)',
-        materia_prima: '=SUMIF(C2:C, "materia prima", B2:B)',
-        repaso: '=SUMIF(C2:C, "repaso", B2:B)',
-        total_paros: "=SUM(E3:E11)",
-      },
-    });
-    ConfigManger.processOperation({
-      time: 1,
-      operation: "initProcessQueueTrigger",
-    });
-  }
+    },
+  });
+
+  ConfigManger.processOperation({
+    time: 1,
+    operation: "initProcessQueueTrigger",
+  });
 }
 
 function clearCache() {
@@ -178,116 +238,3 @@ function clearCache() {
   RequestLock.clearCache();
   console.log(RequestLock.getIsReady());
 }
-/* 
-function doPost(e: any) {
-  init();
-  const requestId = `req_${Date.now()}_${Math.random()
-    .toString(36)
-    .substr(2, 9)}`;
-
-  try {
-    const body = e.postData.contents;
-    const json = JSON.parse(body);
-    const id = json.id || generateUUID();
-
-    // Handle config requests without locking (they're usually fast)
-    if (json.type == "config") {
-      return ConfigManger.setConfig(json.data);
-    }
-
-    // Handle isReady requests without locking
-    if (json.type == "isReady") {
-      // Clear any expired locks first
-      RequestLock.clearExpiredLocks();
-
-      const isReady =
-        PropertiesService.getScriptProperties().getProperty("isReady");
-      const lockExists =
-        PropertiesService.getScriptProperties().getProperty("request_lock");
-
-      // Return false if there's an active lock or if explicitly set to false
-      return ContentService.createTextOutput(
-        !lockExists && (isReady === null || isReady === "true")
-          ? "true"
-          : "false"
-      );
-    }
-    // For all other requests, use locking mechanism
-    if (!RequestLock.acquireLock(requestId)) {
-      return ContentService.createTextOutput(
-        JSON.stringify({
-          error: "Request timeout",
-          message: "Could not acquire lock within timeout period",
-        })
-      ).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    try {
-      // Set processing state
-      PropertiesService.getScriptProperties().setProperty("isReady", "false");
-
-      // Process the request
-
-      if (!QueueManager.operations.includes(json.type)) {
-        PropertiesService.getScriptProperties().setProperty("isReady", "true");
-        return ContentService.createTextOutput(
-          JSON.stringify({
-            error: "Invalid request type",
-            message: "Only 'insertRowMany' and 'insertRow' are supported",
-            requestId: requestId,
-          })
-        ).setMimeType(ContentService.MimeType.JSON);
-      }
-
-      // Process the request
-
-      if (Array.isArray(json.data)) {
-        (json.data as QueueItem[]).forEach((item) => {
-          const queueItem: QueueItem = {
-            type: json.type,
-            data: item,
-            id: generateUUID(),
-            timestamp: new Date(item.timestamp || Date.now()).getTime(),
-          };
-          QueueManager.Queue.addToQueue(queueItem);
-        });
-      } else {
-        const queueItem = {
-          type: json.type,
-          data: json.data,
-          id: generateUUID(),
-          timestamp: new Date(json.data.timestamp || Date.now()).getTime(),
-        };
-        QueueManager.Queue.addToQueue(queueItem);
-      }
-
-      // Set ready state
-      PropertiesService.getScriptProperties().setProperty("isReady", "true");
-
-      return ContentService.createTextOutput(
-        JSON.stringify({
-          success: true,
-          message: "Item added to queue",
-          requestId: requestId,
-        })
-      ).setMimeType(ContentService.MimeType.JSON);
-    } finally {
-      // Always release the lock
-      RequestLock.releaseLock(requestId);
-    }
-  } catch (error) {
-    // Release lock in case of error
-    RequestLock.releaseLock(requestId);
-
-    // Set ready state even if there was an error
-    PropertiesService.getScriptProperties().setProperty("isReady", "true");
-
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        error: "Internal error",
-        message: (error as string).toString(),
-        requestId: requestId,
-      })
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
-} */

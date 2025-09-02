@@ -11,7 +11,7 @@
     "logout": "clasp logout",
     "push": "npm run build && clasp push",
     "pull": "clasp pull",
-    "create": "clasp create --title ExcelControl --type webapp --rootDir ./dist"
+    "create": "clasp create --title Damper --type webapp --rootDir ./dist"
   },
   "dependencies": {},
   "devDependencies": {
