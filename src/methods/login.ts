@@ -1,6 +1,7 @@
 import { ConfigManger } from "../config/ConfigManger";
 import { DriveManager } from "../DriveManager";
 import { RequestLock } from "../RequestLock/RequestLock";
+import { SessionManager } from "../SessionManager/sessionManager";
 import { SheetManager } from "../SheetManager";
 //import { sheetName, sheetName1, spreadsheetName } from "./getUser";
 import { Body, Route } from "./Route";
@@ -42,15 +43,24 @@ export class RouteLogin extends Route {
       return ContentService.createTextOutput(
         JSON.stringify({
           correct: false,
+          alreadyLogged: false,
         })
       ).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const hasSession = SessionManager.getSession(body.data.dni);
+    if (!hasSession) {
+      SessionManager.saveSession(body.data.dni);
     }
 
     RequestLock.setIsReady(true);
     return ContentService.createTextOutput(
       JSON.stringify({
-        correct: true,
+        correct: !hasSession,
+        alreadyLogged: hasSession,
       })
     ).setMimeType(ContentService.MimeType.JSON);
   }
+
+  static saveCache() {}
 }

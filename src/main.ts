@@ -1,3 +1,4 @@
+import { CacheManager } from "./CacheManager";
 import { ConfigManger } from "./config/ConfigManger";
 import { DriveManager } from "./DriveManager";
 import {
@@ -14,6 +15,7 @@ import { RouteLogin } from "./methods/login";
 import { Body } from "./methods/Route";
 import { QueueManager } from "./QueueManager";
 import { RequestLock } from "./RequestLock/RequestLock";
+import { SessionManager } from "./SessionManager/sessionManager";
 import { SheetManager } from "./SheetManager";
 import { Format1 } from "./templates/Format1";
 import { TriggerManager } from "./TriggerManager/TriggerManager";
@@ -79,6 +81,7 @@ function doPost(e: any) {
 }
 
 function triggerFunc() {
+  SessionManager.clearExpiredSessions();
   QueueManager.ProcessQueue.processQueue(ConfigManger.getConfig());
 }
 
@@ -103,6 +106,11 @@ function init() {
           {
             type: "textEqualTo",
             value: "trabajando",
+            background: "#41B451",
+          },
+          {
+            type: "textEqualTo",
+            value: "horas extra",
             background: "#41B451",
           },
           {
@@ -246,5 +254,6 @@ function clearCache() {
   ConfigManger.clearConfig();
   Format1.restoreFormta1Memory();
   RequestLock.clearCache();
-  console.log(RequestLock.getIsReady());
+  SessionManager.clearCache();
+  CacheManager.clearAllCache();
 }
