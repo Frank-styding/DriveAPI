@@ -48,6 +48,8 @@ export class File {
         return null;
       }
 
+      if (!file) return null;
+
       const mimeType = file.getMimeType();
       if (!mimeType.startsWith("image/")) {
         return null;
