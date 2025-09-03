@@ -157,9 +157,6 @@ function init() {
       pausas: {
         numberFormat: "[h]:mm:ss",
       },
-      repaso: {
-        numberFormat: "[h]:mm:ss",
-      },
       "no trabajando": {
         numberFormat: "[h]:mm:ss",
       },
@@ -175,9 +172,8 @@ function init() {
       almuerzo: '=SUMIF(C2:C, "almuerzo", B2:B)',
       charlas: '=SUMIF(C2:C, "charla", B2:B)',
       pausas: '=SUMIF(C2:C, "pausa", B2:B)',
-      repaso: '=SUMIF(C2:C, "repaso", B2:B)',
       "no trabajando": '=SUMIF(C2:C, "no trabajando", B2:B)',
-      total_paros: "=SUM(E3:E11)",
+      total_paros: "=SUM(E3:E10)",
     },
     appConfig: {
       buttons: [
@@ -187,7 +183,6 @@ function init() {
         { label: "Causas climatológicas", value: "problemas climaticos" },
         { label: "Charlas & Reuniones", value: "charla" },
         { label: "Pausas Activas", value: "pausa activa" },
-        { label: "Repaso", value: "repaso" },
       ],
 
       select_options: [

@@ -27,30 +27,25 @@ export class File {
         }
       }
 
-      let fileId = cache.filesData[fileName];
+      let fileId;
       let file: GoogleAppsScript.Drive.File;
 
-      if (!fileId) {
-        let fileIterator: GoogleAppsScript.Drive.FileIterator;
+      let fileIterator: GoogleAppsScript.Drive.FileIterator;
 
-        if (folderId) {
-          const folder = DriveApp.getFolderById(folderId);
-          fileIterator = folder.getFilesByName(fileName);
-        } else {
-          fileIterator = DriveApp.getFilesByName(fileName);
-        }
-
-        if (fileIterator.hasNext()) {
-          file = fileIterator.next();
-          fileId = file.getId();
-
-          this.saveFileID(fileName, fileId);
-          DriveCache.saveCache();
-        } else {
-          return null;
-        }
+      if (folderId) {
+        const folder = DriveApp.getFolderById(folderId);
+        fileIterator = folder.getFilesByName(fileName);
       } else {
-        file = DriveApp.getFileById(fileId);
+        fileIterator = DriveApp.getFilesByName(fileName);
+      }
+
+      if (fileIterator.hasNext()) {
+        file = fileIterator.next();
+        fileId = file.getId();
+        /* this.saveFileID(fileName, fileId); */
+        /* DriveCache.saveCache(); */
+      } else {
+        return null;
       }
 
       const mimeType = file.getMimeType();
