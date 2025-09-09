@@ -183,15 +183,16 @@ function init() {
         { label: "Causas climatológicas", value: "problemas climaticos" },
         { label: "Charlas & Reuniones", value: "charla" },
         { label: "Pausas Activas", value: "pausa activa" },
+        { label: "Cambio de formato", value: "Cambio de formato" },
       ],
 
       select_options: [
-        { label: "N°1", value: "1" },
-        { label: "N°2", value: "2" },
-        { label: "N°3", value: "3" },
-        { label: "N°4", value: "4" },
-        { label: "N°5", value: "5" },
-        { label: "N°6", value: "6" },
+        { label: "Santo Domingo", value: "Santo_Domingo" },
+        { label: "Agromorin", value: "Agromorin" },
+        { label: "Casaverde", value: "Casaverde" },
+        { label: "Compositan", value: "Compositan" },
+        { label: "Victoria", value: "Victoria" },
+        { label: "El Palmar", value: "El_Palmar" },
       ],
       messages: {
         almuerzo: {
@@ -209,9 +210,10 @@ a la acción con todo lo necesario.`,
           title: "¡Un momento de estrategia, Capitán!",
           message: `Tu equipo está planificando los siguientes pasos. La comunicación es la base del éxito.`,
         },
-        repaso: {
-          title: "¡Capitán, un momento de reflexión!",
-          message: `El equipo está revisando los detalles. Analizar el día es clave para mejorar mañana.`,
+        "Cambio de formato": {
+          title: "¡Cambio de formato, Capitán!",
+          message: `El equipo está ajustándose para cosechar el nuevo producto. 
+¡La versatilidad es nuestra fortaleza!`,
         },
         "traslado interno": {
           title: "¡En movimiento, Capitán!",
