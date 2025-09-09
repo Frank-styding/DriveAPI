@@ -48,11 +48,10 @@ export class RouteLogin extends Route {
       ).setMimeType(ContentService.MimeType.JSON);
     }
 
-    //const hasSession = SessionManager.getSession(body.data.dni);
-    /*  if (!hasSession) {
+    /* const hasSession = SessionManager.getSession(body.data.dni);
+    if (!hasSession) {
       SessionManager.saveSession(body.data.dni);
     } */
-
     RequestLock.setIsReady(true);
     return ContentService.createTextOutput(
       JSON.stringify({

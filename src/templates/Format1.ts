@@ -81,8 +81,25 @@ export class Format1 {
       this.createTemplateFormat1(headers, formulas, tableData),
       [
         {
-          range: [headers.length, 0, 1, rows],
+          range: [headers.length, 0, 1, tableEntries.length],
+          formats: [{ type: "background", data: { color: "#666666" } }],
+        },
+        {
+          range: [headers.length, tableEntries.length, 1, 1],
+          formats: [{ type: "background", data: { color: "#6398eb" } }],
+        },
+        {
+          range: [
+            headers.length,
+            tableEntries.length + 1,
+            1,
+            formulaEntries.length - 2,
+          ],
           formats: [{ type: "background", data: { color: "yellow" } }],
+        },
+        {
+          range: [headers.length, rows - 1, 1, 1],
+          formats: [{ type: "background", data: { color: "#ca6674" } }],
         },
         {
           range: [0, 0, headers.length, 1],
@@ -207,16 +224,16 @@ export class Format1 {
         })
       );
 
-      // filter for vavlid DNI---------
-      /*       const dni = tableData[tableName]["dni"];
+      const _spreadsheetName = config["usersSpreadsheet"];
+      const _usersSheet = config["usersSheet"];
+      const dni = tableData[tableName]["dni"];
       const row = SheetManager.Table.findByColumnValue(
-        spreadsheetName,
-        sheetName,
+        _spreadsheetName,
+        _usersSheet,
         "dni",
         dni
       );
-      if (!row) return; */
-      //------------------------------
+      if (!row) return;
 
       this.createFormat1Table(
         spreadsheetName,

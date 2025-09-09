@@ -88,7 +88,7 @@ function triggerFunc() {
 function init() {
   ConfigManger.setProperty({
     folderName: "data",
-    headers: ["inicio", "horas", "estado"],
+    headers: ["inicio", "horas", "razón", "estado"],
     usersSpreadsheet: "capitanes_data",
     usersSheet: "Capitanes",
     passwordSheet: "Contraseña",
@@ -97,7 +97,7 @@ function init() {
       1: {
         numberFormat: "[h]:mm:ss",
       },
-      2: {
+      3: {
         conditionalRules: [
           {
             type: "textIsEmpty",
@@ -127,6 +127,19 @@ function init() {
             type: "notEqualTo",
             value: "trabajando",
             background: "#AA3636",
+          },
+        ],
+      },
+      2: {
+        conditionalRules: [
+          {
+            type: "textIsEmpty",
+            background: "white",
+          },
+          {
+            type: "textEqualTo",
+            value: " ",
+            background: "#cccccc",
           },
         ],
       },
@@ -160,20 +173,24 @@ function init() {
       "no trabajando": {
         numberFormat: "[h]:mm:ss",
       },
+      "Cambio de formato": {
+        numberFormat: "[h]:mm:ss",
+      },
       total_paros: {
         numberFormat: "[h]:mm:ss",
       },
     },
     formulas: {
-      "horas trabajadas": '=SUMIF(C2:C, "trabajando", B2:B)',
-      falta_matriales: '=SUMIF(C2:C, "materiales", B2:B)',
-      translado_interno: '=SUMIF(C2:C, "traslado interno", B2:B)',
-      problemas_climaticos: '=SUMIF(C2:C, "problemas climaticos", B2:B)',
-      almuerzo: '=SUMIF(C2:C, "almuerzo", B2:B)',
-      charlas: '=SUMIF(C2:C, "charla", B2:B)',
-      pausas: '=SUMIF(C2:C, "pausa", B2:B)',
-      "no trabajando": '=SUMIF(C2:C, "no trabajando", B2:B)',
-      total_paros: "=SUM(E3:E10)",
+      "horas trabajadas": '=SUMIF(D2:D, "trabajando", B2:B)',
+      "no trabajando": '=SUMIF(D2:D, "no trabajando", B2:B)',
+      falta_matriales: '=SUMIF(D2:D, "materiales", B2:B)',
+      translado_interno: '=SUMIF(D2:D, "traslado interno", B2:B)',
+      problemas_climaticos: '=SUMIF(D2:D, "problemas climaticos", B2:B)',
+      almuerzo: '=SUMIF(D2:D, "almuerzo", B2:B)',
+      charlas: '=SUMIF(D2:D, "charla", B2:B)',
+      pausas: '=SUMIF(D2:D, "pausa activa", B2:B)',
+      "Cambio de formato": '=SUMIF(D2:D, "Cambio de formato", B2:B)',
+      total_paros: "=SUM(E3:E11)",
     },
     appConfig: {
       buttons: [
