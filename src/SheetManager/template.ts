@@ -164,9 +164,8 @@ export class Template {
 
     const processedTemplate = template.map((row) =>
       row.map((cell) =>
-        cell && cell.startsWith("formula:")
-          ? "=" +
-            FormulaProcessor.processFormula(startCol, startRow, cell.slice(8))
+        cell && cell.startsWith("=")
+          ? FormulaProcessor.processFormula(startCol, startRow, cell)
           : cell || ""
       )
     );

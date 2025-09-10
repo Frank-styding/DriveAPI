@@ -17,6 +17,7 @@ import { QueueManager } from "./QueueManager";
 import { RequestLock } from "./RequestLock/RequestLock";
 import { SessionManager } from "./SessionManager/sessionManager";
 import { SheetManager } from "./SheetManager";
+import { FormulaProcessor } from "./SheetManager/formula";
 import { Format1 } from "./templates/Format1";
 import { TriggerManager } from "./TriggerManager/TriggerManager";
 
@@ -190,7 +191,7 @@ function init() {
       charlas: '=SUMIF(D2:D, "charla", B2:B)',
       pausas: '=SUMIF(D2:D, "pausa activa", B2:B)',
       "Cambio de formato": '=SUMIF(D2:D, "Cambio de formato", B2:B)',
-      total_paros: "=SUM(E3:E11)",
+      total_paros: "=SUM(F3:F11)",
     },
     appConfig: {
       buttons: [
@@ -261,4 +262,10 @@ function clearCache() {
   RequestLock.clearCache();
   SessionManager.clearCache();
   CacheManager.clearAllCache();
+}
+
+function test() {
+  const formula = '=SUMIF(D2:D, "pausa activa", B2:B)';
+  const result = FormulaProcessor.processFormula(7, 2, formula); // startCol=7 => columna G, startRow=2
+  Logger.log(result);
 }

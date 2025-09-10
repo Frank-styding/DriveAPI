@@ -218,22 +218,22 @@ export class Format1 {
             return item[header];
           }
           if (rowFormulas && rowFormulas[header]) {
-            return "formula:" + rowFormulas[header];
+            return rowFormulas[header];
           }
           return "";
         })
       );
 
-      const _spreadsheetName = config["usersSpreadsheet"];
+      /*       const _spreadsheetName = config["usersSpreadsheet"];
       const _usersSheet = config["usersSheet"];
       const dni = tableData[tableName]["dni"];
       const row = SheetManager.Table.findByColumnValue(
         _spreadsheetName,
         _usersSheet,
         "dni",
-        dni
+        
       );
-      if (!row) return;
+      if (!row) return; */
 
       this.createFormat1Table(
         spreadsheetName,

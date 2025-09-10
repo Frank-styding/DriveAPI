@@ -202,11 +202,11 @@ export class Row {
     rows.forEach((row, rowIndex) => {
       const rowValues: string[] = [];
       row.forEach((item) => {
-        if (item && item.startsWith("formula:")) {
+        if (item && item.startsWith("=")) {
           const formula = FormulaProcessor.processFormula(
             startCol,
             startRow + rowIndex,
-            item.slice(8)
+            item
           );
           rowValues.push(formula);
         } else {

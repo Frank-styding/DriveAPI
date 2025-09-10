@@ -9,7 +9,7 @@ export class FormulaProcessor {
 
   private static colCache: Map<number, string>;
   private static letterCache: Map<string, number>;
-
+  private static regexMixedRange: RegExp;
   // Inicializa solo una vez
   private static initialize() {
     if (this.initialized) return;
@@ -18,8 +18,10 @@ export class FormulaProcessor {
     this.regexColRange = /^\$?[A-Z]+:\$?[A-Z]+$/;
     this.regexRowRange = /^\d+:\d+$/;
     this.regexCellRange = /^\$?[A-Z]+\$?\d+:\$?[A-Z]+\$?\d+$/;
+    this.regexMixedRange = /^\$?[A-Z]+\$?\d+:\$?[A-Z]+$/;
+
     this.regexFinder =
-      /\$?[A-Z]+\$?\d+|\$?[A-Z]+:\$?[A-Z]+|\$?[A-Z]+\$?\d*:\$?[A-Z]+\$?\d*|\d+:\d+/g;
+      /\$?[A-Z]+\$?\d+:\$?[A-Z]+\$?\d+|\$?[A-Z]+\$?\d+:\$?[A-Z]+|\$?[A-Z]+:\$?[A-Z]+|\d+:\d+|\$?[A-Z]+\$?\d+/g;
 
     this.colCache = new Map();
     this.letterCache = new Map();
@@ -58,6 +60,61 @@ export class FormulaProcessor {
     this.initialize();
 
     return formula.replace(this.regexFinder, (match) => {
+      // Rango con celdas (A1:C3, $A$1:B$2)
+      if (this.regexCellRange.test(match)) {
+        const [p1, p2] = match.split(":");
+        const [, c1Abs, c1Letters, r1Abs, r1Num] = p1.match(
+          /^(\$?)([A-Z]+)(\$?)(\d+)$/
+        )!;
+        const [, c2Abs, c2Letters, r2Abs, r2Num] = p2.match(
+          /^(\$?)([A-Z]+)(\$?)(\d+)$/
+        )!;
+        const c1Num = this.letterToCol(c1Letters);
+        const c2Num = this.letterToCol(c2Letters);
+        const r1 = parseInt(r1Num);
+        const r2 = parseInt(r2Num);
+        const newC1 = c1Abs
+          ? c1Letters
+          : this.colToLetter(startCol + (c1Num - 1));
+        const newR1 = r1Abs ? r1 : startRow + (r1 - 1);
+        const newC2 = c2Abs
+          ? c2Letters
+          : this.colToLetter(startCol + (c2Num - 1));
+        const newR2 = r2Abs ? r2 : startRow + (r2 - 1);
+        return `${c1Abs ? "$" : ""}${newC1}${r1Abs ? "$" : ""}${newR1}:${
+          c2Abs ? "$" : ""
+        }${newC2}${r2Abs ? "$" : ""}${newR2}`;
+      }
+      // Rango mixto (ej: A2:A, D5:D)
+      if (this.regexMixedRange.test(match)) {
+        const [p1, p2] = match.split(":");
+
+        // izquierda con fila
+        const [, c1Abs, c1Letters, r1Abs, r1Num] = p1.match(
+          /^(\$?)([A-Z]+)(\$?)(\d+)$/
+        )!;
+
+        // derecha solo columna
+        const [, c2Abs, c2Letters] = p2.match(/^(\$?)([A-Z]+)$/)!;
+
+        const c1Num = this.letterToCol(c1Letters);
+        const r1 = parseInt(r1Num);
+        const c2Num = this.letterToCol(c2Letters);
+
+        const newC1 = c1Abs
+          ? c1Letters
+          : this.colToLetter(startCol + (c1Num - 1));
+        const newR1 = r1Abs ? r1 : startRow + (r1 - 1);
+        const newC2 = c2Abs
+          ? c2Letters
+          : this.colToLetter(startCol + (c2Num - 1));
+
+        // ✅ ojo: la derecha también se mueve en columna
+        return `${c1Abs ? "$" : ""}${newC1}${r1Abs ? "$" : ""}${newR1}:${
+          c2Abs ? "$" : ""
+        }${newC2}`;
+      }
+
       // Celda simple (A1, $A1, A$1, $A$1)
       if (this.regexCell.test(match)) {
         const [, colAbs, colLetters, rowAbs, rowNum] = match.match(
@@ -65,10 +122,8 @@ export class FormulaProcessor {
         )!;
         const colNumber = this.letterToCol(colLetters);
         const rowNumber = parseInt(rowNum);
-
         const newCol = colAbs ? colNumber : startCol + (colNumber - 1);
         const newRow = rowAbs ? rowNumber : startRow + (rowNumber - 1);
-
         return `${colAbs ? "$" : ""}${this.colToLetter(newCol)}${
           rowAbs ? "$" : ""
         }${newRow}`;
@@ -79,14 +134,12 @@ export class FormulaProcessor {
         const [c1, c2] = match.split(":");
         const [, c1Abs, c1Letters] = c1.match(/^(\$?)([A-Z]+)$/)!;
         const [, c2Abs, c2Letters] = c2.match(/^(\$?)([A-Z]+)$/)!;
-
         const newC1 = c1Abs
           ? c1Letters
           : this.colToLetter(startCol + (this.letterToCol(c1Letters) - 1));
         const newC2 = c2Abs
           ? c2Letters
           : this.colToLetter(startCol + (this.letterToCol(c2Letters) - 1));
-
         return `${c1Abs ? "$" : ""}${newC1}:${c2Abs ? "$" : ""}${newC2}`;
       }
 
@@ -96,37 +149,6 @@ export class FormulaProcessor {
         const newR1 = startRow + (r1 - 1);
         const newR2 = startRow + (r2 - 1);
         return `${newR1}:${newR2}`;
-      }
-
-      // Rango con celdas (A1:C3, $A$1:B$2)
-      if (this.regexCellRange.test(match)) {
-        const [p1, p2] = match.split(":");
-
-        const [, c1Abs, c1Letters, r1Abs, r1Num] = p1.match(
-          /^(\$?)([A-Z]+)(\$?)(\d+)$/
-        )!;
-        const [, c2Abs, c2Letters, r2Abs, r2Num] = p2.match(
-          /^(\$?)([A-Z]+)(\$?)(\d+)$/
-        )!;
-
-        const c1Num = this.letterToCol(c1Letters);
-        const c2Num = this.letterToCol(c2Letters);
-        const r1 = parseInt(r1Num);
-        const r2 = parseInt(r2Num);
-
-        const newC1 = c1Abs
-          ? c1Letters
-          : this.colToLetter(startCol + (c1Num - 1));
-        const newR1 = r1Abs ? r1 : startRow + (r1 - 1);
-
-        const newC2 = c2Abs
-          ? c2Letters
-          : this.colToLetter(startCol + (c2Num - 1));
-        const newR2 = r2Abs ? r2 : startRow + (r2 - 1);
-
-        return `${c1Abs ? "$" : ""}${newC1}${r1Abs ? "$" : ""}${newR1}:${
-          c2Abs ? "$" : ""
-        }${newC2}${r2Abs ? "$" : ""}${newR2}`;
       }
 
       return match;
