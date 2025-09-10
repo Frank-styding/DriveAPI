@@ -214,14 +214,11 @@ function init() {
       messages: {
         almuerzo: {
           title: "¡Disfruta del almuerzo, Capitán!",
-          message: `Recargar energías es la mejor inversión
-para una tarde productiva.
-¡Te esperamos!`,
+          message: `Recargar energías es la mejor inversión para una tarde productiva. ¡Te esperamos!`,
         },
         materiales: {
           title: "¡Material en camino, Capitán!",
-          message: `En unos minutos tu equipo volverá
-a la acción con todo lo necesario.`,
+          message: `En unos minutos tu equipo volverá a la acción con todo lo necesario.`,
         },
         charla: {
           title: "¡Un momento de estrategia, Capitán!",
@@ -229,25 +226,19 @@ a la acción con todo lo necesario.`,
         },
         "Cambio de formato": {
           title: "¡Cambio de formato, Capitán!",
-          message: `El equipo está ajustándose para cosechar el nuevo producto. 
-¡La versatilidad es nuestra fortaleza!`,
+          message: `El equipo está ajustándose para cosechar el nuevo producto. ¡La versatilidad es nuestra fortaleza!`,
         },
         "traslado interno": {
           title: "¡En movimiento, Capitán!",
-          message: `El equipo se está trasladando. 
-¡La productividad no se detiene!`,
+          message: `El equipo se está trasladando. ¡La productividad no se detiene!`,
         },
         "problemas climaticos": {
           title: "¡Una breve pausa, Capitán!",
-          message: `El clima manda en el campo, 
-pero el equipo está listo para continuar 
-en cuanto el cielo lo permita.`,
+          message: `El clima manda en el campo, pero el equipo está listo para continuar en cuanto el cielo lo permita.`,
         },
         "pausa activa": {
-          title: `Recuerda, Capitán: 
-¡Cuerpo sano, mente sana!`,
-          message: `El equipo está en su pausa activa. Unos minutos 
-de estiramiento y a seguir con la jornada.`,
+          title: `Recuerda, Capitán: ¡Cuerpo sano, mente sana!`,
+          message: `El equipo está en su pausa activa. Unos minutos de estiramiento y a seguir con la jornada.`,
         },
       },
     },
