@@ -28,7 +28,7 @@ export class RouteInsertToQueue extends Route {
         type: body.type,
         data: body.data,
         id: body.id || id,
-        timestamp: new Date(body.timestamp || Date.now()).getTime(),
+        timestamp: new Date(body.timestamp).getTime(),
       };
       QueueManager.Queue.addToQueue(queueItem);
       RequestLock.setIsReady(true);

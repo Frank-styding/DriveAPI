@@ -16,6 +16,7 @@ export class Queue {
   private static dedupe(queue: QueueItem[]): QueueItem[] {
     const uniqueMap = new Map<string, QueueItem>();
     queue.forEach((item) => {
+      if (uniqueMap.has(item.id)) return;
       uniqueMap.set(item.id, item);
     });
     return Array.from(uniqueMap.values()).sort(
@@ -101,6 +102,10 @@ export class Queue {
   private static saveStoredIds(storedIds: StoredId[]): void {
     const props = PropertiesService.getScriptProperties();
     props.setProperty(QUEUE_MEMORY_KEY, JSON.stringify(storedIds));
+  }
+
+  static deleteIds() {
+    PropertiesService.getScriptProperties().deleteProperty(QUEUE_MEMORY_KEY);
   }
 
   private static cleanExpiredIds(storedIds: StoredId[]): StoredId[] {

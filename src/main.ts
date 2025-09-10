@@ -14,6 +14,7 @@ import { RouteGetUser } from "./methods/getUser";
 import { RouteLogin } from "./methods/login";
 import { Body } from "./methods/Route";
 import { QueueManager } from "./QueueManager";
+import { Queue } from "./QueueManager/queue";
 import { RequestLock } from "./RequestLock/RequestLock";
 import { SessionManager } from "./SessionManager/sessionManager";
 import { SheetManager } from "./SheetManager";
@@ -256,6 +257,7 @@ function clearCache() {
   SheetManager.cache.clearCache();
   QueueManager.cache.clearCache();
   QueueManager.Queue.clearQueue();
+  Queue.deleteIds();
   TriggerManager.deleteAllTriggers();
   ConfigManger.clearConfig();
   Format1.restoreFormta1Memory();
