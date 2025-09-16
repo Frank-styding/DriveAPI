@@ -4,7 +4,7 @@ import { IFormat, SheetManager } from "../SheetManager/index";
 interface IConfig {
   tableNames: string[];
   headers: string[];
-  formulas: Record<string, string>;
+  formulas: Record<string, { formula: string; format: IFormat; color: string }>;
   rowFormulas: Record<string, string>;
   folderName: string;
 }
@@ -40,12 +40,25 @@ export class Format1 {
     return colList;
   }
 
+  private static getFormulaTemplate(
+    formula: Record<string, { formula: string; format: IFormat; color: string }>
+  ) {
+    const obj: Record<string, string> = {};
+    Object.entries(formula).forEach(([key, value]) => {
+      obj[key] = value.formula;
+    });
+    return obj;
+  }
+
   static createFormat1Table(
     spreadsheetName: string,
     sheetName: string,
     tableName: string,
     headers: string[],
-    formulas: Record<string, string>,
+    formulas: Record<
+      string,
+      { formula: string; format: IFormat; color: string }
+    >,
     tableData: Record<string, string>,
     config: Record<string, any>
   ) {
@@ -78,8 +91,48 @@ export class Format1 {
       sheetName,
       startCol,
       startRow,
-      this.createTemplateFormat1(headers, formulas, tableData),
+      this.createTemplateFormat1(
+        headers,
+        this.getFormulaTemplate(formulas),
+        tableData
+      ),
       [
+        ...Object.values(formulas).map((value, index) => {
+          return {
+            range: [headers.length, tableEntries.length + index, 2, 1] as [
+              number,
+              number,
+              number,
+              number
+            ],
+            formats: [{ type: "background", data: { color: value.color } }],
+          };
+        }),
+        {
+          range: [headers.length, 0, 1, tableEntries.length],
+          formats: [{ type: "background", data: { color: "#666666" } }],
+        },
+        {
+          range: [0, 0, headers.length, 1],
+          formats: [
+            { type: "background", data: { color: "#f0f0f0" } },
+            { type: "font", data: { bold: true } },
+          ],
+        },
+        /* {
+          range: [headers.length, 0, 2, rows],
+          formats: [
+            {
+              type: "border",
+              data: {
+                borders: [true, true, true, true, true, true, null, null],
+              },
+            },
+          ],
+        }, */
+      ]
+
+      /* [
         {
           range: [headers.length, 0, 1, tableEntries.length],
           formats: [{ type: "background", data: { color: "#666666" } }],
@@ -108,18 +161,8 @@ export class Format1 {
             { type: "font", data: { bold: true } },
           ],
         },
-        {
-          range: [headers.length, 0, 2, rows],
-          formats: [
-            {
-              type: "border",
-              data: {
-                borders: [true, true, true, true, true, true, null, null],
-              },
-            },
-          ],
-        },
-      ]
+ 
+      ] */
     );
 
     if (config["headerFormats"]) {
@@ -140,7 +183,19 @@ export class Format1 {
       );
     }
 
-    if (config["formulasFormat"]) {
+    SheetManager.Template.applyColumnFormats(
+      spreadsheetName,
+      sheetName,
+      Object.values(formulas).map((value, index) => {
+        if (!value.format) return;
+        return {
+          cellCol: headers.length + 1 + startCol,
+          cellRow: tableEntries.length + 1 + index,
+          ...value.format,
+        };
+      }) as IFormat[]
+    );
+    /*  if (config["formulasFormat"]) {
       const formulasFormat = Object.entries(
         config["formulasFormat"] as ConfigFormat
       ).map(([key, value]) => ({
@@ -157,7 +212,7 @@ export class Format1 {
         sheetName,
         formulasFormat
       );
-    }
+    } */
 
     tableNames[sheetName].push(tableName);
     PropertiesService.getScriptProperties().setProperty(
