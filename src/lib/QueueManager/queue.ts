@@ -16,7 +16,6 @@ export class Queue {
   private static dedupe(queue: QueueItem[]): QueueItem[] {
     const uniqueMap = new Map<string, QueueItem>();
     queue.forEach((item) => {
-      if (uniqueMap.has(item.id)) return;
       uniqueMap.set(item.id, item);
     });
     return Array.from(uniqueMap.values()).sort(

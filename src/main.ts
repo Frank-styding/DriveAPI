@@ -1,7 +1,6 @@
-import { CacheManager } from "./CacheManager";
+import { CacheManager } from "./lib/CacheManager";
 import { config } from "./config";
 import { ConfigManger } from "./config/ConfigManger";
-import { DriveManager } from "./DriveManager";
 import {
   RouteExecute,
   RouteInsertToQueue,
@@ -13,21 +12,22 @@ import { RouteAppConfig } from "./methods/getAppConfig";
 import { RouteGetImage } from "./methods/getImage";
 import { RouteGetUser } from "./methods/getUser";
 import { RouteLogin } from "./methods/login";
-import { Body } from "./methods/Route";
-import { QueueManager } from "./QueueManager";
-import { Queue } from "./QueueManager/queue";
-import { RequestLock } from "./RequestLock/RequestLock";
-import { SessionManager } from "./SessionManager/sessionManager";
-import { SheetManager } from "./SheetManager";
-import { FormulaProcessor } from "./SheetManager/formula";
+import { Body } from "./lib/Router/Route";
+import { RequestLock } from "./lib/RequestLock/RequestLock";
+import { SessionManager } from "./lib/SessionManager/sessionManager";
 import { Format1 } from "./templates/Format1";
-import { TriggerManager } from "./TriggerManager/TriggerManager";
+import { TriggerManager } from "./lib/TriggerManager/TriggerManager";
+import { DriveManager } from "./lib/DriveManager";
+import { QueueManager } from "./lib/QueueManager";
+import { Queue } from "./lib/QueueManager/queue";
+import { SheetManager } from "./lib/SheetManager";
+import { FormulaProcessor } from "./lib/SheetManager/formula";
+import { ProcessQueue } from "./processQueue";
+import { CreateSummary } from "./createSummary";
 
 function doPost(e: any) {
   if (Object.keys(ConfigManger.getConfig()).length == 0) init();
-  const requestId = `req_${Date.now()}_${Math.random()
-    .toString(36)
-    .substr(2, 9)}`;
+  const requestId = Utilities.getUuid();
   try {
     const body = e.postData.contents;
     const bodyJson = JSON.parse(body) as Body;
@@ -60,7 +60,6 @@ function doPost(e: any) {
     ]);
 
     if (data) {
-      RequestLock.releaseLock(requestId);
       return data;
     }
 
@@ -71,8 +70,6 @@ function doPost(e: any) {
       })
     ).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
-    RequestLock.releaseLock(requestId);
-    RequestLock.setIsReady(true);
     return ContentService.createTextOutput(
       JSON.stringify({
         error: "Internal error",
@@ -80,21 +77,22 @@ function doPost(e: any) {
         requestId: requestId,
       })
     ).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    RequestLock.releaseLock(requestId);
+    RequestLock.setIsReady(true);
   }
-}
-
-function triggerFunc() {
-  SessionManager.clearExpiredSessions();
-  QueueManager.ProcessQueue.processQueue(ConfigManger.getConfig());
 }
 
 function init() {
   ConfigManger.setProperty(config);
-
   ConfigManger.processOperation({
     time: 1,
     operation: "initProcessQueueTrigger",
   });
+}
+
+function testSummary() {
+  CreateSummary.createSummarySheet();
 }
 
 function clearCache() {
@@ -111,8 +109,50 @@ function clearCache() {
   CacheManager.clearAllCache();
 }
 
+function hasCreatedSummaryToday(): boolean {
+  const props = PropertiesService.getScriptProperties();
+  const today = new Date().toISOString().slice(0, 10);
+  return props.getProperty("summaryCreatedDate") === today;
+}
+
+function setSummaryCreatedToday() {
+  const props = PropertiesService.getScriptProperties();
+  const today = new Date().toISOString().slice(0, 10);
+  props.setProperty("summaryCreatedDate", today);
+}
+
+function isTime630(): boolean {
+  const now = new Date();
+  return now.getHours() === 6 && now.getMinutes() === 30;
+}
+
 function test() {
   const formula = '=SUMIF(D2:D, "pausa activa", B2:B)';
   const result = FormulaProcessor.processFormula(7, 2, formula); // startCol=7 => columna G, startRow=2
   Logger.log(result);
+}
+function triggerFunc() {
+  const triggerId = `trigger_${Date.now()}`;
+  console.log(JSON.stringify(Queue.getQueue()));
+  if (!RequestLock.acquireLock(triggerId)) {
+    console.log("Trigger detenido: lock ocupado por petición");
+    return;
+  }
+  // console.log(JSON.stringify(Queue.getQueue()));
+  try {
+    RequestLock.setIsReady(false);
+    ProcessQueue.processQueue(ConfigManger.getConfig());
+
+    // Solo crear el resumen si es 6:30 y no se ha creado hoy
+    if (isTime630() && !hasCreatedSummaryToday()) {
+      CreateSummary.createSummarySheet();
+      setSummaryCreatedToday();
+      console.log("Resumen creado a las 6:30");
+    }
+  } catch (error) {
+    console.error("Error en triggerFunc:", error);
+  } finally {
+    RequestLock.releaseLock(triggerId);
+    RequestLock.setIsReady(true);
+  }
 }

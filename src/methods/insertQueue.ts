@@ -1,6 +1,7 @@
-import { QueueManager, QueueItem } from "../QueueManager";
-import { RequestLock } from "../RequestLock/RequestLock";
-import { Body, Route } from "./Route";
+import { QueueItem, QueueManager } from "../lib/QueueManager";
+import { RequestLock } from "../lib/RequestLock/RequestLock";
+import { Body, Route } from "../lib/Router/Route";
+import { operations } from "../processQueue";
 
 interface BodyData {
   spreadsheetName?: string | undefined;
@@ -13,10 +14,12 @@ export class RouteInsertToQueue extends Route {
     body: Body<BodyData>,
     requestId: string
   ): GoogleAppsScript.Content.TextOutput | null {
-    if (!QueueManager.operations.includes(body.type)) return null;
+    if (!operations.includes(body.type)) return null;
     try {
       RequestLock.setIsReady(false);
       if (QueueManager.Queue.hasId(body.id)) {
+        RequestLock.setIsReady(true);
+        RequestLock.releaseLock(requestId);
         return ContentService.createTextOutput(
           JSON.stringify({
             success: true,
@@ -32,6 +35,7 @@ export class RouteInsertToQueue extends Route {
       };
       QueueManager.Queue.addToQueue(queueItem);
       RequestLock.setIsReady(true);
+      RequestLock.releaseLock(requestId);
       return ContentService.createTextOutput(
         JSON.stringify({
           success: true,

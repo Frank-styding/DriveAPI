@@ -60,13 +60,12 @@ export class Sheet {
     if (!sheet) return;
     return sheet.getDataRange().getValues();
   }
-  static getSheetNames(spreadsheetName: string) {
+  static getSheets(spreadsheetName: string) {
     const cache = SheetCache.getCache();
     const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) return [];
     const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
-    if (!spreadsheet) return;
-
-    return spreadsheet.getSheets().map((sheet) => sheet.getName());
+    if (!spreadsheet) return [];
+    return spreadsheet.getSheets();
   }
 }

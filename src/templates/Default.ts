@@ -1,5 +1,5 @@
-import { QueueItem } from "../QueueManager/QueueItem";
-import { SheetManager } from "../SheetManager/index";
+import { QueueItem } from "../lib/QueueManager";
+import { SheetManager } from "../lib/SheetManager";
 
 export class Default {
   static processInsertRow(

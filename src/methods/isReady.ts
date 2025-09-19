@@ -1,5 +1,5 @@
-import { RequestLock } from "../RequestLock/RequestLock";
-import { Body, Route } from "./Route";
+import { RequestLock } from "../lib/RequestLock/RequestLock";
+import { Body, Route } from "../lib/Router/Route";
 
 export class RouteIsReady extends Route {
   static override method(

@@ -1,6 +1,6 @@
 import { ConfigManger } from "../config/ConfigManger";
-import { SheetManager } from "../SheetManager";
-import { Body, Route } from "./Route";
+/* import { SheetManager } from "../SheetManager"; */
+import { Body, Route } from "../lib/Router/Route";
 
 export class RouteAppConfig extends Route {
   static override method(body: Body, requestId: string) {

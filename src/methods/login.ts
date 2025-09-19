@@ -1,10 +1,7 @@
 import { ConfigManger } from "../config/ConfigManger";
-import { DriveManager } from "../DriveManager";
-import { RequestLock } from "../RequestLock/RequestLock";
-import { SessionManager } from "../SessionManager/sessionManager";
-import { SheetManager } from "../SheetManager";
-//import { sheetName, sheetName1, spreadsheetName } from "./getUser";
-import { Body, Route } from "./Route";
+import { RequestLock } from "../lib/RequestLock/RequestLock";
+import { Body, Route } from "../lib/Router/Route";
+import { SheetManager } from "../lib/SheetManager";
 
 interface BodyData {
   dni: string;
@@ -47,11 +44,6 @@ export class RouteLogin extends Route {
         })
       ).setMimeType(ContentService.MimeType.JSON);
     }
-
-    /* const hasSession = SessionManager.getSession(body.data.dni);
-    if (!hasSession) {
-      SessionManager.saveSession(body.data.dni);
-    } */
     RequestLock.setIsReady(true);
     return ContentService.createTextOutput(
       JSON.stringify({

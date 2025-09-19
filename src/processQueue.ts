@@ -1,7 +1,8 @@
-import { Template } from "../templates";
-import { Utils } from "../utils/utils";
-import { Queue } from "./queue";
-import { QueueItem } from "./QueueItem";
+import { QueueItem } from "./lib/QueueManager";
+import { Queue } from "./lib/QueueManager/queue";
+import { RequestLock } from "./lib/RequestLock/RequestLock";
+import { Template } from "./templates";
+import { Utils } from "./utils/utils";
 export const operations = ["insert", "insert:format_1"];
 export class ProcessQueue {
   private constructor() {}
@@ -10,19 +11,6 @@ export class ProcessQueue {
     if (queue.length === 0) {
       return;
     }
-    this.processType(
-      queue,
-      "insert",
-      config,
-      (data, sheetName, config, spreadsheetName) => {
-        Template.Default.processInsertRow(
-          data,
-          sheetName,
-          config,
-          spreadsheetName
-        );
-      }
-    );
     this.processType(
       queue,
       "insert:format_1",
@@ -52,10 +40,13 @@ export class ProcessQueue {
   ) {
     const insertRowQueue = queue.filter((item) => item.type === type);
     if (insertRowQueue.length == 0) return;
+
     const groupedData: Record<string, Record<string, QueueItem[]>> = {};
+
     insertRowQueue.forEach((item) => {
       const spreadsheetName =
         item.data.spreadsheetName || Utils.formatDate(new Date());
+
       const sheetName = item.data.sheetName || Utils.formatDate(new Date());
       if (!groupedData[spreadsheetName]) {
         groupedData[spreadsheetName] = {};

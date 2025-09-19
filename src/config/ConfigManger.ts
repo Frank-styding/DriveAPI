@@ -1,8 +1,8 @@
-import { DriveManager } from "../DriveManager";
-import { ProcessQueue } from "../QueueManager/processQueue";
-import { Queue } from "../QueueManager/queue";
-import { SheetManager } from "../SheetManager/index";
-import { TriggerManager } from "../TriggerManager/TriggerManager";
+import { DriveManager } from "../lib/DriveManager";
+import { Queue } from "../lib/QueueManager/queue";
+import { SheetManager } from "../lib/SheetManager";
+import { ProcessQueue } from "../processQueue";
+import { TriggerManager } from "../lib/TriggerManager/TriggerManager";
 
 export class ConfigManger {
   private constructor() {}

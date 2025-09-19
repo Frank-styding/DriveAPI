@@ -1,4 +1,5 @@
-import { CacheManager } from "../CacheManager";
+import { CacheManager } from "../CacheManager/CacheManager";
+
 interface IDriveCache {
   foldersData: Record<string, string>;
   filesData: Record<string, string>;

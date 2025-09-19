@@ -1,5 +1,5 @@
 import { ConfigManger } from "../config/ConfigManger";
-import { Body, Route } from "./Route";
+import { Body, Route } from "../lib/Router/Route";
 
 export class RouteSetConfig extends Route {
   static override method(body: Body) {

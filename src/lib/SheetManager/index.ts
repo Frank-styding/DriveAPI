@@ -5,6 +5,7 @@ import { Template } from "./template";
 import { Table } from "./table";
 import { SheetCache } from "./cache";
 export type { IFormat } from "./template";
+
 export const SheetManager = {
   Sheet,
   Row,

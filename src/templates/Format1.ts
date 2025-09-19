@@ -1,6 +1,5 @@
-import { QueueItem } from "../QueueManager/QueueItem";
-import { ItemHistory } from "../RequestHistory/ItemHistory";
-import { IFormat, SheetManager } from "../SheetManager/index";
+import { QueueItem } from "../lib/QueueManager";
+import { IFormat, SheetManager } from "../lib/SheetManager";
 interface IConfig {
   tableNames: string[];
   headers: string[];
@@ -8,6 +7,8 @@ interface IConfig {
   rowFormulas: Record<string, string>;
   folderName: string;
 }
+const KEY = "Format_1_data";
+
 export class Format1 {
   static createTemplateFormat1(
     headers: string[],
@@ -70,7 +71,6 @@ export class Format1 {
       }
     >;
 
-    const KEY = "Format_1_data";
     const property = PropertiesService.getScriptProperties().getProperty(KEY);
     const tableNames = (property ? JSON.parse(property) : {}) as Record<
       string,
@@ -119,50 +119,7 @@ export class Format1 {
             { type: "font", data: { bold: true } },
           ],
         },
-        /* {
-          range: [headers.length, 0, 2, rows],
-          formats: [
-            {
-              type: "border",
-              data: {
-                borders: [true, true, true, true, true, true, null, null],
-              },
-            },
-          ],
-        }, */
       ]
-
-      /* [
-        {
-          range: [headers.length, 0, 1, tableEntries.length],
-          formats: [{ type: "background", data: { color: "#666666" } }],
-        },
-        {
-          range: [headers.length, tableEntries.length, 1, 1],
-          formats: [{ type: "background", data: { color: "#6398eb" } }],
-        },
-        {
-          range: [
-            headers.length,
-            tableEntries.length + 1,
-            1,
-            formulaEntries.length - 2,
-          ],
-          formats: [{ type: "background", data: { color: "yellow" } }],
-        },
-        {
-          range: [headers.length, rows - 1, 1, 1],
-          formats: [{ type: "background", data: { color: "#ca6674" } }],
-        },
-        {
-          range: [0, 0, headers.length, 1],
-          formats: [
-            { type: "background", data: { color: "#f0f0f0" } },
-            { type: "font", data: { bold: true } },
-          ],
-        },
- 
-      ] */
     );
 
     if (config["headerFormats"]) {
@@ -195,24 +152,6 @@ export class Format1 {
         };
       }) as IFormat[]
     );
-    /*  if (config["formulasFormat"]) {
-      const formulasFormat = Object.entries(
-        config["formulasFormat"] as ConfigFormat
-      ).map(([key, value]) => ({
-        cellCol: headers.length + 1 + startCol,
-        ///!  change this if you change template
-        cellRow:
-          tableEntries.length +
-          1 +
-          formulaEntries.findIndex(([i, _]) => i == key),
-        ...value,
-      })) as IFormat[];
-      SheetManager.Template.applyColumnFormats(
-        spreadsheetName,
-        sheetName,
-        formulasFormat
-      );
-    } */
 
     tableNames[sheetName].push(tableName);
     PropertiesService.getScriptProperties().setProperty(
@@ -220,13 +159,19 @@ export class Format1 {
       JSON.stringify(tableNames)
     );
   }
-  static getStarCol(headers: string[], sheetName: string, tableName: string) {
-    const KEY = "Format_1_data";
+
+  static getTableNames() {
     const property = PropertiesService.getScriptProperties().getProperty(KEY);
+    return (property ? JSON.parse(property) : {}) as Record<string, string[]>;
+  }
+
+  static getStarCol(headers: string[], sheetName: string, tableName: string) {
+    /*     const property = PropertiesService.getScriptProperties().getProperty(KEY);
     const tableNames = (property ? JSON.parse(property) : {}) as Record<
       string,
-      string[]
-    >;
+      string[] */
+    /* >; */
+    const tableNames = this.getTableNames();
     if (!tableNames[sheetName]) {
       tableNames[sheetName] = [];
     }
@@ -234,7 +179,6 @@ export class Format1 {
   }
 
   static restoreFormta1Memory() {
-    const KEY = "Format_1_data";
     PropertiesService.getScriptProperties().deleteProperty(KEY);
   }
 
@@ -266,6 +210,13 @@ export class Format1 {
       SheetManager.Sheet.createSheet(spreadsheetName, sheetName);
     }
 
+    /*    console.log(
+      "Format1:",
+      JSON.stringify(groupDataByTable),
+      "---",
+      JSON.stringify(data)
+    );
+ */
     Object.entries(groupDataByTable).forEach(([tableName, items]) => {
       const rows = items.map((item) =>
         headers.map((header) => {
@@ -278,17 +229,6 @@ export class Format1 {
           return "";
         })
       );
-
-      /*       const _spreadsheetName = config["usersSpreadsheet"];
-      const _usersSheet = config["usersSheet"];
-      const dni = tableData[tableName]["dni"];
-      const row = SheetManager.Table.findByColumnValue(
-        _spreadsheetName,
-        _usersSheet,
-        "dni",
-        
-      );
-      if (!row) return; */
 
       this.createFormat1Table(
         spreadsheetName,

@@ -7,7 +7,7 @@ export class RequestLock {
     if (this.LOCK_KEY) return;
     this.LOCK_KEY = "request_lock";
     this.LOCK_TIMEOUT = 30000;
-    this.CHECK_INTERVAL = 100;
+    this.CHECK_INTERVAL = 200;
   }
 
   static acquireLock(requestId: string): boolean {
@@ -30,7 +30,7 @@ export class RequestLock {
           JSON.stringify(lockInfo)
         );
 
-        Utilities.sleep(10);
+        Utilities.sleep(50);
         const verifyLock = PropertiesService.getScriptProperties().getProperty(
           this.LOCK_KEY
         );

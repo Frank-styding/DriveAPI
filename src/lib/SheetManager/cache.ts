@@ -1,4 +1,4 @@
-import { CacheManager } from "../CacheManager";
+import { CacheManager } from "../CacheManager/CacheManager";
 
 const SHEET_KEY = "SHEET_KEY";
 

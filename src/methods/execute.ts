@@ -1,5 +1,5 @@
 import { ConfigManger } from "../config/ConfigManger";
-import { Route, Body } from "./Route";
+import { Route, Body } from "../lib/Router/Route";
 
 export class RouteExecute extends Route {
   static override method(

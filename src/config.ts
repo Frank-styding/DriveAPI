@@ -57,7 +57,6 @@ export const config = {
     },
   },
   rowFormulas: {
-    fin: "=A2",
     horas: "=IF(OR(ISBLANK(A1); ISBLANK(A2)); 0; A2 - A1)",
   },
   formulas: {
@@ -124,6 +123,16 @@ export const config = {
         numberFormat: "[h]:mm:ss",
       },
     },
+
+    "Falta de materia prima": {
+      formula:
+        '=IFERROR(ABS(TIMEVALUE("15:30:00") - INDEX(A:A, MATCH("materia prima", C:C, 0))), 0)',
+      color: "#8e7cc3",
+      format: {
+        numberFormat: "[h]:mm:ss",
+      },
+    },
+
     "Total Paros": {
       formula: "=SUM(F4:F11)",
       color: "#F82525",

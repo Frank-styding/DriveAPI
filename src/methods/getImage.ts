@@ -1,6 +1,6 @@
 import { ConfigManger } from "../config/ConfigManger";
-import { DriveManager } from "../DriveManager";
-import { Body, Route } from "./Route";
+import { DriveManager } from "../lib/DriveManager";
+import { Body, Route } from "../lib/Router/Route";
 
 export class RouteGetImage extends Route {
   static override method(body: Body, requestId: string) {
