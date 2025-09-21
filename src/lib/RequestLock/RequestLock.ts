@@ -7,7 +7,7 @@ export class RequestLock {
     if (this.LOCK_KEY) return;
     this.LOCK_KEY = "request_lock";
     this.LOCK_TIMEOUT = 30000;
-    this.CHECK_INTERVAL = 200;
+    this.CHECK_INTERVAL = 300;
   }
 
   static acquireLock(requestId: string): boolean {
@@ -30,7 +30,7 @@ export class RequestLock {
           JSON.stringify(lockInfo)
         );
 
-        Utilities.sleep(50);
+        Utilities.sleep(100);
         const verifyLock = PropertiesService.getScriptProperties().getProperty(
           this.LOCK_KEY
         );
@@ -54,19 +54,19 @@ export class RequestLock {
 
     return false;
   }
-  static setIsReady(isReady: boolean) {
+  /*   static setIsReady(isReady: boolean) {
     PropertiesService.getScriptProperties().setProperty(
       "isReady",
       isReady ? "true" : "false"
     );
-  }
-  static getIsReady() {
+  } */
+  /*   static getIsReady() {
     const isReady =
       PropertiesService.getScriptProperties().getProperty("isReady");
     const lockExists =
       PropertiesService.getScriptProperties().getProperty("request_lock");
     return !lockExists && (isReady === null || isReady === "true");
-  }
+  } */
 
   static releaseLock(requestId: string): void {
     this.initialize();
@@ -85,7 +85,7 @@ export class RequestLock {
   static clearCache() {
     this.initialize();
     PropertiesService.getScriptProperties().deleteProperty(this.LOCK_KEY);
-    PropertiesService.getScriptProperties().deleteProperty("isReady");
+    // PropertiesService.getScriptProperties().deleteProperty("isReady");
   }
 
   static clearExpiredLocks(): void {

@@ -1,10 +1,26 @@
+function testLogin() {
+  const testEvent = {
+    postData: {
+      contents: JSON.stringify({
+        type: "login",
+        data: {
+          dni: "88888888",
+          password: "123123",
+        },
+      }),
+    },
+  };
+  const result = doPost(testEvent);
+  console.log("Resultado testLogin:", result);
+  return result;
+}
 import { CacheManager } from "./lib/CacheManager";
 import { config } from "./config";
 import { ConfigManger } from "./config/ConfigManger";
 import {
   RouteExecute,
   RouteInsertToQueue,
-  RouteIsReady,
+  /*   RouteIsReady, */
   RouterManager,
   RouteSetConfig,
 } from "./methods";
@@ -27,28 +43,30 @@ import { CreateSummary } from "./createSummary";
 
 function doPost(e: any) {
   if (Object.keys(ConfigManger.getConfig()).length == 0) init();
-  const requestId = Utilities.getUuid();
+  const requestId = `req_${Date.now()}`;
+  const body = e.postData.contents;
+  const bodyJson = JSON.parse(body) as Body;
+
+  //console.error(body);
+
+  const unlockData = RouterManager.executeRoute(bodyJson, requestId, [
+    /* RouteIsReady, */
+    RouteGetUser,
+    RouteLogin,
+    RouteGetImage,
+    RouteAppConfig,
+  ]);
+
+  if (unlockData) {
+    return unlockData;
+  }
+
   try {
-    const body = e.postData.contents;
-    const bodyJson = JSON.parse(body) as Body;
-
-    const unlockData = RouterManager.executeRoute(bodyJson, requestId, [
-      RouteIsReady,
-      RouteGetUser,
-      RouteLogin,
-      RouteGetImage,
-      RouteAppConfig,
-    ]);
-
-    if (unlockData) {
-      return unlockData;
-    }
-
+    TriggerManager.createTrigger(1);
     if (!RequestLock.acquireLock(requestId)) {
       return ContentService.createTextOutput(
         JSON.stringify({
-          error: "Request timeout",
-          message: "Could not acquire lock within timeout period",
+          success: false,
         })
       ).setMimeType(ContentService.MimeType.JSON);
     }
@@ -65,30 +83,29 @@ function doPost(e: any) {
 
     return ContentService.createTextOutput(
       JSON.stringify({
-        error: "Invalid request type",
-        requestId: requestId,
+        success: true,
+        message: "No action taken",
       })
     ).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService.createTextOutput(
       JSON.stringify({
-        error: "Internal error",
-        message: (error as string).toString(),
-        requestId: requestId,
+        success: true,
+        message: "No action taken",
       })
     ).setMimeType(ContentService.MimeType.JSON);
   } finally {
     RequestLock.releaseLock(requestId);
-    RequestLock.setIsReady(true);
+    //RequestLock.setIsReady(true);
   }
 }
 
 function init() {
   ConfigManger.setProperty(config);
-  ConfigManger.processOperation({
+  /*   ConfigManger.processOperation({
     time: 1,
     operation: "initProcessQueueTrigger",
-  });
+  }); */
 }
 
 function testSummary() {
@@ -133,14 +150,19 @@ function test() {
 }
 function triggerFunc() {
   const triggerId = `trigger_${Date.now()}`;
-  console.log(JSON.stringify(Queue.getQueue()));
   if (!RequestLock.acquireLock(triggerId)) {
     console.log("Trigger detenido: lock ocupado por petición");
     return;
   }
-  // console.log(JSON.stringify(Queue.getQueue()));
+  console.log(JSON.stringify(Queue.getQueue()));
+  // Si la cola está vacía, cancelar ejecución y eliminar el trigger
+  if (!Queue.getQueue() || Queue.getQueue().length === 0) {
+    console.log("Cola vacía, triggerFunc cancelada. Eliminando trigger...");
+    TriggerManager.deleteAllTriggers();
+    RequestLock.releaseLock(triggerId);
+    return;
+  }
   try {
-    RequestLock.setIsReady(false);
     ProcessQueue.processQueue(ConfigManger.getConfig());
 
     // Solo crear el resumen si es 6:30 y no se ha creado hoy
@@ -153,6 +175,5 @@ function triggerFunc() {
     console.error("Error en triggerFunc:", error);
   } finally {
     RequestLock.releaseLock(triggerId);
-    RequestLock.setIsReady(true);
   }
 }

@@ -16,33 +16,35 @@ export class RouteInsertToQueue extends Route {
   ): GoogleAppsScript.Content.TextOutput | null {
     if (!operations.includes(body.type)) return null;
     try {
-      RequestLock.setIsReady(false);
+      /*  RequestLock.setIsReady(false); */
+
       if (QueueManager.Queue.hasId(body.id)) {
-        RequestLock.setIsReady(true);
-        RequestLock.releaseLock(requestId);
+        /*  RequestLock.setIsReady(true); */
+        /*  RequestLock.releaseLock(requestId); */
         return ContentService.createTextOutput(
           JSON.stringify({
             success: true,
           })
         ).setMimeType(ContentService.MimeType.JSON);
       }
-      const id = Utilities.getUuid();
+
+      //const id = Utilities.getUuid();
       const queueItem: QueueItem = {
         type: body.type,
         data: body.data,
-        id: body.id || id,
+        id: body.id /* || id */,
         timestamp: new Date(body.timestamp).getTime(),
       };
       QueueManager.Queue.addToQueue(queueItem);
-      RequestLock.setIsReady(true);
-      RequestLock.releaseLock(requestId);
+      /*  RequestLock.setIsReady(true); */
+      /* RequestLock.releaseLock(requestId); */
       return ContentService.createTextOutput(
         JSON.stringify({
           success: true,
         })
       ).setMimeType(ContentService.MimeType.JSON);
     } finally {
-      RequestLock.setIsReady(true);
+      /*  RequestLock.setIsReady(true); */
       RequestLock.releaseLock(requestId);
     }
   }

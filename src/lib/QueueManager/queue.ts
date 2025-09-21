@@ -28,6 +28,7 @@ export class Queue {
     if (this.hasId(item.id)) {
       return; // ya existe, no lo guardamos
     }
+    this.registerId(item.id);
 
     if (!item.timestamp) {
       item.timestamp = new Date().getTime();
@@ -38,8 +39,6 @@ export class Queue {
 
     const cleaned = this.dedupe(queue);
     QueueCache.saveCache(cleaned);
-
-    this.registerId(item.id);
   }
 
   static addToQueueMany(items: QueueItem[]): void {

@@ -36,7 +36,7 @@ export class RouteLogin extends Route {
       password == body.data.password && row != undefined && row != null;
 
     if (!isValid) {
-      RequestLock.setIsReady(true);
+      /*       RequestLock.setIsReady(true); */
       return ContentService.createTextOutput(
         JSON.stringify({
           correct: false,
@@ -44,7 +44,7 @@ export class RouteLogin extends Route {
         })
       ).setMimeType(ContentService.MimeType.JSON);
     }
-    RequestLock.setIsReady(true);
+    /*     RequestLock.setIsReady(true); */
     return ContentService.createTextOutput(
       JSON.stringify({
         correct: true,

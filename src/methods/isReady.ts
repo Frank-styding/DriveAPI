@@ -1,4 +1,4 @@
-import { RequestLock } from "../lib/RequestLock/RequestLock";
+/* import { RequestLock } from "../lib/RequestLock/RequestLock";
 import { Body, Route } from "../lib/Router/Route";
 
 export class RouteIsReady extends Route {
@@ -12,3 +12,4 @@ export class RouteIsReady extends Route {
     ).setMimeType(ContentService.MimeType.JSON);
   }
 }
+ */
