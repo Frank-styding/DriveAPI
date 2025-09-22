@@ -61,7 +61,7 @@ export const config = {
   },
   formulas: {
     "Tiempo Disponible (hrs)": {
-      formula: '=SUMIF(D2:D, "trabajando", B2:B) + F12',
+      formula: '=SUMIF(D2:D, "trabajando", B2:B) + F13',
       color: "#a4c2f4",
       format: {
         numberFormat: "[h]:mm:ss",
@@ -148,7 +148,7 @@ export const config = {
       },
     },
     "%EG": {
-      formula: "= (F3 - F12) / (F3)",
+      formula: "= (F3 - F13) / (F3)",
       color: "#1B84E7",
       format: {
         numberFormat: "0.00%",

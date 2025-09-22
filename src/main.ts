@@ -158,15 +158,28 @@ function triggerFunc() {
   // Si la cola está vacía, cancelar ejecución y eliminar el trigger
   if (!Queue.getQueue() || Queue.getQueue().length === 0) {
     console.log("Cola vacía, triggerFunc cancelada. Eliminando trigger...");
-    TriggerManager.deleteAllTriggers();
+    //TriggerManager.deleteAllTriggers();
     RequestLock.releaseLock(triggerId);
     return;
   }
+  /*    const place = sheetName.replace(/Fundo_/g, "").replace(/_/g, " ");
+    const dni = tableData["dni"]; */
+
   try {
     ProcessQueue.processQueue(ConfigManger.getConfig());
-
-    // Solo crear el resumen si es 6:30 y no se ha creado hoy
     if (isTime630() && !hasCreatedSummaryToday()) {
+      ///---------------------------------------
+      const config = ConfigManger.getConfig() as Record<string, any>;
+      const usersSheet = config["usersSheet"];
+      const usersSpreadsheet = config["usersSpreadsheet"];
+      if (!usersSheet || !usersSpreadsheet) return;
+      const spreadSheet =
+        SheetManager.Spreadsheet.getSpreadSheet(usersSpreadsheet);
+      if (!spreadSheet) return;
+      const sheet = spreadSheet.getSheetByName(usersSheet);
+      if (!sheet) return;
+      sheet.getRange(2, 3, sheet.getLastRow(), 1).clearContent();
+      ///---------------------------------------
       CreateSummary.createSummarySheet();
       setSummaryCreatedToday();
       console.log("Resumen creado a las 6:30");

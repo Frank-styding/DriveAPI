@@ -25,6 +25,13 @@ export class Spreadsheet {
     return spreadsheet;
   }
 
+  static getSpreadSheet(name: string) {
+    const cache = SheetCache.getCache();
+    const spreadsheetId = cache.spreadsheets[name];
+    if (!spreadsheetId) return;
+    return SpreadsheetApp.openById(spreadsheetId);
+  }
+
   static createSpreadsheet(name: string, folderName?: string) {
     const cache = SheetCache.getCache();
     if (cache.spreadsheets[name]) return;

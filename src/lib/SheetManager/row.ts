@@ -124,17 +124,17 @@ export class Row {
     spreadsheetName: string,
     sheetName: string,
     searchedCriteriaObject: Record<string, any>
-  ): Record<string, any> {
+  ): { rowData: Record<string, any>; index: number } {
     const cache = SheetCache.getCache();
     const spreadsheetId = cache.spreadsheets[spreadsheetName];
     if (!spreadsheetId) throw new Error("Spreadsheet does not exist.");
     const spreadsheet = Spreadsheet.getSpreadsheet(spreadsheetId);
-    if (!spreadsheet) return {};
+    if (!spreadsheet) return { rowData: {}, index: -1 };
 
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
     const lastRow = sheet.getLastRow();
-    if (lastRow < 2) return {}; // No data to search
+    if (lastRow < 2) return { rowData: {}, index: -1 }; // No data to search
     const headers = sheet
       .getRange(1, 1, 1, sheet.getLastColumn())
       .getValues()[0];
@@ -152,9 +152,9 @@ export class Row {
           break;
         }
       }
-      if (match) return rowData;
+      if (match) return { rowData, index: i };
     }
-    return {};
+    return { rowData: {}, index: -1 };
   }
   static getMaxRow(spreadsheetName: string, sheetName: string, col: number) {
     const cache = SheetCache.getCache();

@@ -27,20 +27,12 @@ export class CreateSummary {
     for (let i = 0; i < tableNames.length; i++) {
       const tableName = tableNames[i];
       const startCol = Format1.getStarCol(headers, sheet.getName(), tableName);
-      const dataRange = sheet.getRange(1, startCol + col, formulaLength);
-      let dataValues = dataRange.getValues().flat();
+      let dataValues: string[] = [];
+      for (let r = 0; r < formulaLength; r++) {
+        const cell = sheet.getRange(1 + r, startCol + col);
+        dataValues.push(`=${sheetName}!${cell.getA1Notation()}`);
+      }
       dataValues.unshift(sheetName.replace(/fundo_/g, "").replace(/_/g, ""));
-      dataValues = dataValues.map((value) => {
-        if (value instanceof Date) {
-          const hours = String(value.getHours()).padStart(2, "0");
-          const minutes = String(value.getMinutes()).padStart(2, "0");
-          return `${hours}:${minutes}`;
-        }
-        if (typeof value == "number") {
-          return value.toString();
-        }
-        return value;
-      });
       cols.push(dataValues);
     }
     return cols;
@@ -93,6 +85,13 @@ export class CreateSummary {
       ]
     );
 
+    const spreatsheet =
+      SheetManager.Spreadsheet.getSpreadSheet(spreadsheet_name);
+    if (!spreatsheet) throw new Error("Spreadsheet does not exist.");
+    const sheet = spreatsheet.getSheetByName(sheet_name);
+    sheet?.autoResizeColumns(1, headers.length);
+    //if (!sheet) throw new Error("Sheet does not exist.");
+
     SheetManager.Template.applyColumnFormats(
       spreadsheet_name,
       sheet_name,
@@ -124,17 +123,24 @@ export class CreateSummary {
     if (!spreadsheet) return;
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet) throw new Error("Sheet does not exist.");
-    let pivotSheet = spreadsheet.getSheetByName("Pivot_Resumen");
+    let pivotSheet = spreadsheet.getSheetByName("Resumen_Dinámico");
     if (pivotSheet) {
       pivotSheet.clear();
     } else {
-      pivotSheet = spreadsheet.insertSheet("Pivot_Resumen");
+      pivotSheet = spreadsheet.insertSheet("Resumen_Dinámico");
     }
+
     const range = sheet.getRange(1, 1, totalRows, totalCols);
     const pivotTable = pivotSheet.getRange(1, 1).createPivotTable(range);
-    pivotTable.addRowGroup(3);
     pivotTable.addRowGroup(1);
-    for (let i = 4; i <= totalCols; i++) {
+    pivotTable.addRowGroup(3);
+    /*    for (let i = 4; i <= totalCols; i++) {
+      pivotTable.addPivotValue(
+        i,
+        SpreadsheetApp.PivotTableSummarizeFunction.SUM
+      );
+    } */
+    for (let i of [16, 15, 14, 13, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
       pivotTable.addPivotValue(
         i,
         SpreadsheetApp.PivotTableSummarizeFunction.SUM
@@ -142,8 +148,32 @@ export class CreateSummary {
     }
     const lastCol = pivotSheet.getLastColumn();
     const lastRow = pivotSheet.getLastRow();
-    if (lastCol > 0 && lastRow > 0) {
-      pivotSheet.getRange(1, 1, lastRow, lastCol).setNumberFormat("[h]:mm");
+
+    //const lastCol = pivotSheet.getLastColumn();
+
+    if (lastCol > 0) {
+      const blueColor = "#cfe2f3"; // azul claro
+      for (let col = 3; col <= lastCol; col++) {
+        // const colLetter = String.fromCharCode(64 + col); // convierte 4 → D, 5 → E, etc.
+        const range = pivotSheet.getRange(1, col, lastRow);
+
+        if (3 <= col && col <= 8) {
+          range.setBackground(blueColor);
+        }
+
+        if (col === 3) {
+          // Columna 4 → porcentaje
+          range.setNumberFormat("0.00%");
+        } else {
+          // Todas las demás columnas mayores a 3 → horas:minutos
+          range.setNumberFormat("[h]:mm");
+        }
+      }
     }
+    /*   if (lastCol > 0 && lastRow > 0) {
+      pivotSheet.getRange(1, 1, lastRow, lastCol).setNumberFormat("[h]:mm");
+    } */
+    pivotSheet.getRange(1, 1, lastRow, lastCol).setFontColor("black");
+    pivotSheet.autoResizeColumns(1, lastCol);
   }
 }

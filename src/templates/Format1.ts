@@ -158,6 +158,30 @@ export class Format1 {
       KEY,
       JSON.stringify(tableNames)
     );
+    this.updateState(tableData, sheetName, config);
+  }
+
+  static updateState(
+    tableData: Record<string, string>,
+    sheetName: string,
+    config: Record<string, any>
+  ) {
+    const place = sheetName.replace(/fundo_/g, "").replace(/_/g, " ");
+    const dni = parseInt(tableData["dni"]);
+    const usersSheet = config["usersSheet"];
+    const usersSpreadsheet = config["usersSpreadsheet"];
+    if (!usersSheet || !usersSpreadsheet) return;
+    const userRows = SheetManager.Row.findRow(usersSpreadsheet, usersSheet, {
+      dni,
+    });
+    const col = userRows.index + 2;
+    if (col == 1) return;
+    const spreadSheet =
+      SheetManager.Spreadsheet.getSpreadSheet(usersSpreadsheet);
+    if (!spreadSheet) return;
+    const sheet = spreadSheet.getSheetByName(usersSheet);
+    if (!sheet) return;
+    sheet.getRange(col, 3).setValue(place);
   }
 
   static getTableNames() {
@@ -210,13 +234,6 @@ export class Format1 {
       SheetManager.Sheet.createSheet(spreadsheetName, sheetName);
     }
 
-    /*    console.log(
-      "Format1:",
-      JSON.stringify(groupDataByTable),
-      "---",
-      JSON.stringify(data)
-    );
- */
     Object.entries(groupDataByTable).forEach(([tableName, items]) => {
       const rows = items.map((item) =>
         headers.map((header) => {
